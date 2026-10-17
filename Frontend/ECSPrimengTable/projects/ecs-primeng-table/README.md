@@ -2,7 +2,7 @@
 
 This NPM package contains ECS PrimeNG table.  
 For full documentation, usage instructions, examples, and updates, please visit the official GitHub repository:
-[https://github.com/AIO1/ECSPrimengTable](https://github.com/AIO1/ECSPrimengTable)
+[https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish](https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish)
 
 > **Note:** Make sure to check the GitHub README for detailed guidance on how to integrate and use this component in your projects.
 ## Column header translations (Angular 19)
@@ -62,13 +62,13 @@ then the original key with ngx-translate's default missing-translation handler.
 Alternatively, return `header: 'columns.username'` from the backend and define
 `{ "columns": { "username": "Usuario" } }` in the Spanish JSON file.
 
-For the complete integration guide, see [Multilanguage column headers](https://github.com/competergiga/ECSPrimengTable/blob/Angular19/README.md#324-multilanguage-column-headers-angular-19).
+For the complete integration guide, see [Multilanguage column headers](https://github.com/competergiga/ECSPrimengTable/blob/Angular19-publish/README.md#324-multilanguage-column-headers-angular-19).
 
 ## Optional navigation state
 
 Set `statePersistence: { enabled: true, key: "people-list" }` in `createTableOptions` to preserve filters, global search, sorting and pagination when returning from a detail page. It is disabled by default. Provide `ECSPrimengTableStateService` on the parent component containing both list and detail routes. Leaving that component clears its in-memory state. Do not provide it at application root or on the list itself.
 
-See the [scope setup and navigation examples](https://github.com/competergiga/ECSPrimengTable/blob/Angular19/README.md#419-optional-state-when-returning-from-a-detail-page).
+See the [scope setup and navigation examples](https://github.com/competergiga/ECSPrimengTable/blob/Angular19-publish/README.md#419-optional-state-when-returning-from-a-detail-page).
 
 ### Enable or disable
 
@@ -102,7 +102,7 @@ automated tests.
 
 Header and row menus are optional and disabled by default. Enable `responsive.headerMenu` and `responsive.rowMenu`. The optional DTO attribute `VisibleOnlyIn` sets initial visibility by viewport while keeping columns available in the selector.
 
-See [configuration, precedence and examples](../../../../README.md#10-responsive-menus-and-initial-column-visibility).
+See [configuration, precedence and examples](https://github.com/competergiga/ECSPrimengTable/blob/Angular19-publish/README.md#10-responsive-menus-and-initial-column-visibility).
 
 
 ### Translating all grid interface text
