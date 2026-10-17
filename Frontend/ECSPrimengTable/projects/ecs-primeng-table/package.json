@@ -30,11 +30,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AIO1/ECSPrimengTable.git"
+    "url": "git+https://github.com/competergiga/ECSPrimengTable.git"
   },
   "bugs": {
-    "url": "https://github.com/AIO1/ECSPrimengTable/issues"
+    "url": "https://github.com/competergiga/ECSPrimengTable/issues"
   },
-  "homepage": "https://eternalcodestudio.com/",
+  "homepage": "https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish",
   "sideEffects": false
 }

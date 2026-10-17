@@ -24,7 +24,6 @@
 		<RepositoryUrl>https://github.com/competergiga/ECSPrimengTable.git</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryBranch>Angular19-publish</RepositoryBranch>		
-		<RepositoryType>git</RepositoryType>
 		<PackageProjectUrl>https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish</PackageProjectUrl>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageIcon>icon.png</PackageIcon>
