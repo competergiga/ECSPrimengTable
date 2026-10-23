@@ -215,6 +215,34 @@
 
         <!-- LOGIC FOR DRAWING TABLE HEADERS -->
         <ng-template #header let-columns>
+            @let headerGroups = getColumnHeaderGroups(columns);
+            @if (headerGroups.length) {
+                <tr class="ecs-column-groups">
+                    @if ((tableOptions.rows?.action?.buttons?.length ?? 0) > 0 && !tableOptions.rows?.action?.positionRight) {
+                        <td aria-hidden="true" pFrozenColumn [frozen]="tableOptions.rows?.action?.frozen ?? false" alignFrozen="left"
+                            [style.width.px]="actionColumnWidth" [style.min-width.px]="actionColumnWidth"></td>
+                    }
+                    @if (tableOptions.rows?.checkboxSelector?.enabled && !tableOptions.rows?.checkboxSelector?.positionRight) {
+                        <td aria-hidden="true" pFrozenColumn [frozen]="tableOptions.rows?.checkboxSelector?.frozen ?? false" alignFrozen="left"
+                            [style.width.px]="tableOptions.rows?.checkboxSelector?.width ?? 150" [style.min-width.px]="tableOptions.rows?.checkboxSelector?.width ?? 150"></td>
+                    }
+                    @for (group of headerGroups; track group.field) {
+                        <td [attr.colspan]="group.colspan" role="columnheader" [attr.aria-colspan]="group.colspan" style="text-align: center; vertical-align: middle;"
+                            pFrozenColumn [frozen]="group.frozenColumnAlign !== FrozenColumnAlign.Noone"
+                            [alignFrozen]="getFrozenColumnAlignAsText(group.frozenColumnAlign)">
+                            {{ group.label | translate }}
+                        </td>
+                    }
+                    @if (tableOptions.rows?.checkboxSelector?.enabled && tableOptions.rows?.checkboxSelector?.positionRight) {
+                        <td aria-hidden="true" pFrozenColumn [frozen]="tableOptions.rows?.checkboxSelector?.frozen ?? false" alignFrozen="right"
+                            [style.width.px]="tableOptions.rows?.checkboxSelector?.width ?? 150" [style.min-width.px]="tableOptions.rows?.checkboxSelector?.width ?? 150"></td>
+                    }
+                    @if ((tableOptions.rows?.action?.buttons?.length ?? 0) > 0 && tableOptions.rows?.action?.positionRight) {
+                        <td aria-hidden="true" pFrozenColumn [frozen]="tableOptions.rows?.action?.frozen ?? false" alignFrozen="right"
+                            [style.width.px]="actionColumnWidth" [style.min-width.px]="actionColumnWidth"></td>
+                    }
+                </tr>
+            }
             <tr>
                 @if (!tableOptions.rows?.action?.positionRight) {
                     <ng-container *ngTemplateOutlet="actionColumnHeaderTemplate"></ng-container>

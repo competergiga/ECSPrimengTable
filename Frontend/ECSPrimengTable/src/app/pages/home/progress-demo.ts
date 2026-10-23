@@ -17,6 +17,7 @@ import { ECSPrimengTable, ECSPrimengTableStateService, createTableOptions, Table
 })
 export class ProgressDemo {
   readonly tableOptions = createTableOptions({
+    responsive: { headerMenu: true },
     urlTableConfiguration: 'ProgressDemo/GetTableConfiguration',
     urlTableData: 'ProgressDemo/GetTableData',
     excelReport: { url: 'ProgressDemo/GenerateExcel' },

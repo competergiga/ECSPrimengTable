@@ -2,7 +2,24 @@ import '@angular/compiler';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createEnvironmentInjector, runInInjectionContext } from '@angular/core';
-import { ECSPrimengTableI18nService, ECSPrimengTable, createTableOptions, DeviceType } from '../dist/ecs-primeng-table/fesm2022/eternalcodestudio-primeng-table.mjs';
+import { ECSPrimengTableI18nService, ECSPrimengTable, createTableOptions, DeviceType, FrozenColumnAlign } from '../dist/ecs-primeng-table/fesm2022/eternalcodestudio-primeng-table.mjs';
+
+test('header groups follow contiguous visible columns after reorder and hiding', () => {
+  const x = setup();
+  const columns = ['Group1', 'Group1', 'Group1', 'Group2', 'Group2'].map((headerGroup, index) => ({
+    field: `col${index + 1}`, headerGroup, frozenColumnAlign: FrozenColumnAlign.Noone
+  }));
+  const spans = cols => x.c.getColumnHeaderGroups(cols).map(group => [group.label, group.colspan]);
+  assert.deepEqual(spans(columns), [['Group1', 3], ['Group2', 2]]);
+  columns.push(columns.shift());
+  assert.deepEqual(spans(columns), [['Group1', 2], ['Group2', 2], ['Group1', 1]]);
+  assert.deepEqual(spans(columns.filter(col => col.headerGroup === 'Group1')), [['Group1', 3]]);
+  assert.deepEqual(spans([columns[0], { field: 'ungrouped' }, columns[1]]), [['Group1', 1], ['', 1], ['Group1', 1]]);
+  assert.deepEqual(spans([]), []);
+  assert.deepEqual(spans([{ field: 'legacy' }, { field: 'blank', headerGroup: '  ' }]), []);
+  assert.deepEqual(spans([{ ...columns[0], frozenColumnAlign: FrozenColumnAlign.Left }, columns[1]]), [['Group1', 1], ['Group1', 1]]);
+  x.close();
+});
 
 function setup(options = {}, width = 1400) {
   const injector = createEnvironmentInjector([ECSPrimengTableI18nService]);

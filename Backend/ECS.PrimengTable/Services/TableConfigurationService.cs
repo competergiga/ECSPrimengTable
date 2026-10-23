@@ -61,6 +61,7 @@ internal static class TableConfigurationService {
             columnsInfo.Add(new ColumnMetadataModel {
                 Field = propertyName,
                 Header = colAtt.Header,
+                HeaderGroup = colAtt.HeaderGroup,
                 DataType = colAtt.DataType,
                 CellDisplay = colAtt.CellDisplay,
                 DataAlignHorizontal = colAtt.DataAlignHorizontal,

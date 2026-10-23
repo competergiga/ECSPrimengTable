@@ -53,3 +53,13 @@
 .ecs-clear-search { border: 0; background: transparent; color: inherit; cursor: pointer; }
 .ecs-responsive-menu { max-width: calc(100vw - 16px); max-height: calc(100dvh - 32px); overflow-y: auto; }
 .ecs-responsive-menu .p-menu-item-link { min-height: 44px; white-space: normal; }
+
+.p-datatable-thead > .ecs-column-groups > td {
+  padding: var(--p-datatable-header-cell-padding);
+  background: var(--p-datatable-header-cell-background);
+  color: var(--p-datatable-header-cell-color);
+  font-weight: var(--p-datatable-column-title-font-weight);
+  border: 1px solid var(--p-datatable-header-cell-border-color);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

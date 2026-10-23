@@ -17,6 +17,9 @@ namespace ECS.PrimengTable.Models {
         /// </summary>
         public string Header { get; set; } = null!;
 
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? HeaderGroup { get; set; }
+
         /// <summary>
         /// Data type of the column.
         /// </summary>

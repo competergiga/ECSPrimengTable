@@ -14,6 +14,8 @@ export interface IColumnMetadata {
     /** Display name or ngx-translate key. Translated only for display; field and metadata are preserved. */
     header: string;
 
+    headerGroup?: string | null;
+
     /** The type of data contained in the column. */
     dataType: DataType;
 
