@@ -14,6 +14,8 @@ namespace ECS.PrimengTable.Models {
         /// </summary>
         public string? Header { get; set; }
 
+        public string? HeaderGroup { get; set; }
+
         /// <summary>Overrides cell presentation without changing numeric filtering or export.</summary>
         public CellDisplay? CellDisplay { get; set; }
 

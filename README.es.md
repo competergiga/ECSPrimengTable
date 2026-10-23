@@ -1040,6 +1040,23 @@ Tenga en cuenta que el ancho inicial **overrides cualquier ancho guardado en vis
 
 
 
+<a id="4315-column-group-headers"></a>
+#### 4.3.15 Cabeceras de grupos de columnas
+
+Las columnas pueden compartir una cabecera opcional centrada sobre sus encabezados individuales. Las columnas visibles consecutivas con la misma etiqueta de grupo comparten una cabecera que abarca su anchura. Al ocultar o reordenar columnas, los grupos se recalculan automáticamente; si otro grupo o una columna sin grupo las separa, la etiqueta se repite en cada tramo independiente.
+
+Las columnas sin grupo dejan un espacio vacío en la fila de grupos. Si ninguna columna visible tiene un grupo, esa fila adicional desaparece. Los cambios de alineación de columnas congeladas también dividen los grupos para mantener las cabeceras alineadas durante el desplazamiento. Las etiquetas de grupo admiten claves de traducción, igual que los encabezados individuales.
+
+Consulta la [configuración y los ejemplos](#6315-column-group-headers).
+
+<p align="center">
+  <img width="1200" height="760" alt="Cabeceras de grupos: grupo inicial, división al reordenar y unión al ocultar Department" src="docs/images/column-group-headers.png" />
+</p>
+
+Ejemplo ilustrativo: `Name` y `Age` comparten la cabecera **Personal details** (datos personales). Al mover `Department` entre ambas se divide el grupo; al ocultarla, las dos columnas visibles vuelven a unirse.
+
+<br><br>
+
 <a id="44-row-configurations"></a>
 ### 4.4 Configuración de filas
 El **ECS PrimeNG Table** le permite configurar varias configuraciones que controlan cómo se comporta cada fila cuando se muestra a los usuarios, así como las acciones asociadas con ellos.
@@ -1641,6 +1658,7 @@ El propósito de esta sección es proporcionar un cuadro que mapee las caracter�
 | Columnas | [4.3.12 Filtrado](#4312-filtering) | [6.3.12 Filtrado](#6312-filtering) |
 | Columnas | [4.3.13 Filtros predefinidos](#4313-predefined-filters) | [Filtros predefinidos](#6313-predefined-filters) |
 | Columnas | [4.3.14 Ancho inicial](#4314-initial-width) | [6.3.14 Ancho inicial](#6314-initial-width) |
+| Columnas | [4.3.15 Cabeceras de grupos de columnas](#4315-column-group-headers) | [6.3.15 Cabeceras de grupos de columnas](#6315-column-group-headers) |
 | Rows | [4.4.1 Selección individual](#441-single-select) | [6.4.1 Selección individual](#641-single-select) |
 | Rows | [4.4.2 Selección mediante casillas de verificación](#442-checkbox-select) | [6.4.2 Selección mediante casillas de verificación](#642-checkbox-select) |
 | Rows | [4.4.3 Estilos dinámicos](#443-dynamic-styling) | [6.4.3 Estilos dinámicos](#643-dynamic-styling) |
@@ -2914,6 +2932,64 @@ Para columnas no congeladas, utilícela con precaución: si el usuario puede cam
 <br><br>
 
 
+
+<a id="6315-column-group-headers"></a>
+#### 6.3.15 Cabeceras de grupos de columnas
+
+Asigna la propiedad opcional `HeaderGroup` de `ColumnAttributes` a cada propiedad del DTO que pertenezca a un grupo. Utiliza la sintaxis de propiedad de atributo (`HeaderGroup = ...`):
+
+```csharp
+using ECS.PrimengTable.Attributes;
+using ECS.PrimengTable.Enums;
+
+public class PersonDto {
+    [ColumnAttributes("Name", HeaderGroup = "groups.personal")]
+    public string Name { get; set; } = "";
+
+    [ColumnAttributes("Age", dataType: DataType.Numeric, HeaderGroup = "groups.personal")]
+    public int Age { get; set; }
+
+    [ColumnAttributes("Department", HeaderGroup = "groups.work")]
+    public string Department { get; set; } = "";
+}
+```
+
+El backend copia el valor a `ColumnMetadataModel.HeaderGroup`, serializado como `headerGroup` en la configuración de la tabla; los valores nulos se omiten del JSON. La propiedad frontend `IColumnMetadata.headerGroup?: string | null` es opcional, por lo que las configuraciones existentes no necesitan cambios. No hace falta activar ninguna opción adicional de la tabla.
+
+Con el orden `Name, Age, Department`, el grupo personal abarca dos columnas y el laboral una. Al reordenar a `Name, Department, Age`, aparecen tres cabeceras y se repite la etiqueta del grupo personal. Al ocultar `Department`, las dos columnas personales visibles vuelven a unirse. Los grupos comparan las etiquetas de los metadatos sin espacios iniciales ni finales y la alineación de congelación antes de traducir las etiquetas.
+
+Añade las etiquetas a los diccionarios ngx-translate de la aplicación, por ejemplo:
+
+```json
+{
+  "groups": {
+    "personal": "Datos personales",
+    "work": "Datos laborales"
+  }
+}
+```
+
+Para definir grupos dinámicos, pasa las sobrescrituras a `GetTableConfiguration` utilizando los nombres de las propiedades del DTO como claves del diccionario:
+
+```csharp
+using ECS.PrimengTable.Models;
+using ECS.PrimengTable.Services;
+
+var dynamicAttributes = new Dictionary<string, ColumnMetadataOverrideModel> {
+    [nameof(PersonDto.Name)] = new() { HeaderGroup = "groups.personal" },
+    [nameof(PersonDto.Age)] = new() { HeaderGroup = "groups.personal" },
+    [nameof(PersonDto.Department)] = new() { HeaderGroup = "" }
+};
+
+var configuration = EcsPrimengTableService.GetTableConfiguration<PersonDto>(
+    dynamicAttributes: dynamicAttributes);
+```
+
+Una sobrescritura nula conserva el valor del atributo; una cadena vacía elimina el grupo. Las etiquetas nulas, vacías o que solo contienen espacios se muestran sin etiqueta de grupo.
+
+La demo `/progress` agrupa las tres primeras columnas bajo `Grupo1` y las dos últimas bajo `Grupo2`. Oculta o reordena columnas para comprobar cómo cambian las cabeceras. Utiliza paquetes frontend y backend que incluyan soporte para `HeaderGroup`.
+
+<br><br>
 
 <a id="64-rows"></a>
 ### 6.4 Filas
@@ -4649,6 +4725,7 @@ Marca una propiedad para definir su comportamiento de columna de tabla en las ta
 | `filterPredefinedValuesName` | `string` | `""` | Nombre utilizado en TipoScript para almacenar valores de filtro predefinidos. |
 | `frozenColumnAlign` | [`FrozenColumnAlign`](#716-frozencolumnalign) | `None` | Indica si la columna está congelada y su alineación. |
 | `header` | `string` | `""` | El nombre mostrado para la columna en la tabla. |
+| `HeaderGroup` | `string?` | `null` | Etiqueta de grupo o clave de traducción opcional. Se asigna con `HeaderGroup = "..."`. |
 | `initialWidth` | `double` | `0` | Ancho inicial de la columna en píxeles. Si se selecciona=0 y se congela, por defecto a 100. |
 | `sendColumnAttributes` | `bool` | `true` | Si es verdad, los atributos de columna se enviarán automáticamente en consultas dinámicas. |
 | `startHidden` | `bool` | `false` | Si es verdad, la columna comienza oculta (sólo si `canBeHidden` es verdad). |
@@ -4749,6 +4826,7 @@ Contiene información sobre el campo, cabecera, tipo, alineación, visibilidad, 
 | `FilterPredefinedValuesName` | `string` | Obtiene o establece el nombre utilizado en TipoScript para almacenar valores de filtro predefinidos. |
 | `FrozenColumnAlign` | [`FrozenColumnAlign`](#716-frozencolumnalign) | Obtiene o establece la alineación de una columna fija. |
 | `Header` | `string` | Obtiene o establece el encabezado que se mostrará para la columna en la tabla. |
+| `HeaderGroup` | `string?` | Etiqueta de grupo o clave de traducción opcional; se serializa como `headerGroup` y se omite cuando es nula. |
 | `InitialWidth` | `double` | Obtiene o establece el ancho inicial de la columna. |
 | `SendColumnAttributes` | `bool` | Obtiene o establece un valor indicando si los atributos de columna serán enviados automáticamente en consultas dinámicas. |
 | `StartHidden` | `bool` | Obtiene o establece un valor indicando si la columna comienza oculta (si se puede ocultar). |
@@ -4789,6 +4867,7 @@ Sólo se aplican propiedades no nulas, permitiendo anulaciones parciales y espec
 | `DateTimezone` | `string?` | Supera la zona horaria aplicada a los valores de la fecha para esta columna. |
 | `ExportDateFormat` | `string?` | `null` | Supera el formato de fecha para esta columna en las exportaciones. |
 | `Header` | `string?` | Anula el encabezado mostrado para la columna. |
+| `HeaderGroup` | `string?` | Sobrescribe la etiqueta del grupo. Un valor nulo conserva el atributo; una cadena vacía elimina el grupo. |
 | `StartHidden` | `bool?` | Anula si la columna comienza oculta. |
 
 <br><br>
@@ -5442,6 +5521,7 @@ Proporciona opciones de configuración para comportamiento de columna, aparienci
 | `filterPredefinedValuesName` | `string` | Nombre de los valores de filtro predefinidos, si los hay. |
 | `frozenColumnAlign` | [`FrozenColumnAlign`](#815-frozencolumnalign) | Alineación para columnas fijas (izquierda o derecha). |
 | `header` | `string` | El nombre de la pantalla del encabezado de la columna. |
+| `headerGroup?` | `string \| null` | Etiqueta de grupo o clave de traducción opcional para columnas visibles consecutivas con la misma alineación de congelación. |
 | `initialWidth` | `number` | Ancho inicial de la columna en píxeles. |
 | `startHidden` | `boolean` | Determina si la columna debe ser ocultada inicialmente. |
 
@@ -5610,6 +5690,12 @@ WIP
 ## 10 Menús adaptables y visibilidad inicial de columnas
 
 Todas las funciones nuevas son opcionales. Sin configurar estas opciones, las aplicaciones conservan sus botones de cabecera, botones de fila y visibilidad de columnas actuales. Las categorías se basan en el **ancho de la ventana del navegador en píxeles CSS**, no en el dispositivo físico.
+
+<p align="center">
+  <img width="1280" height="820" alt="Menús adaptables en móvil y tablet: acciones de cabecera en un menú hamburguesa y acciones de fila en un menú de tres puntos verticales" src="docs/images/responsive-menus.png" />
+</p>
+
+Ejemplo ilustrativo con ambas opciones activadas: el panel izquierdo muestra el menú de cabecera abierto con **☰** y el derecho, el menú de una fila abierto con **⋮**. El buscador global permanece visible. Los paneles representan estados separados: abrir un menú cierra el otro. Las opciones disponibles dependen de la configuración de la tabla y de los botones personalizados.
 
 ### Opciones del frontend
 

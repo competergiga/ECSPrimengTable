@@ -1,3 +1,19 @@
+# Group Headers
+
+Set `HeaderGroup` on backend column attributes:
+
+```csharp
+[ColumnAttributes("Name", HeaderGroup = "Group1")]
+public string Name { get; set; } = "";
+
+[ColumnAttributes("Age", dataType: DataType.Numeric, HeaderGroup = "Group1")]
+public int Age { get; set; }
+```
+
+Consecutive visible columns sharing `headerGroup` receive a centered spanning header. Reordering or hiding columns recalculates the runs, repeating the label when a group is split. Ungrouped columns leave a blank space; no extra row is rendered when no visible column has a group. Frozen alignment boundaries split runs to preserve scrolling alignment. Labels support translation keys just like `header`.
+
+Use `ColumnMetadataOverrideModel.HeaderGroup` for dynamic overrides; an empty string removes a group. The `/progress` example groups the first three columns under `Grupo1` and the last two under `Grupo2`.
+
 # ECS PrimeNG table
 
 This NPM package contains ECS PrimeNG table.  

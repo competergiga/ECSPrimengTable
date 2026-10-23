@@ -1,3 +1,19 @@
+# Cabeceras de grupo
+
+Asigna `HeaderGroup` a los atributos de las columnas del backend:
+
+```csharp
+[ColumnAttributes("Nombre", HeaderGroup = "Grupo1")]
+public string Nombre { get; set; } = "";
+
+[ColumnAttributes("Edad", dataType: DataType.Numeric, HeaderGroup = "Grupo1")]
+public int Edad { get; set; }
+```
+
+Las columnas visibles consecutivas con el mismo `headerGroup` comparten una cabecera superior centrada. Al mover u ocultar columnas, los tramos se recalculan: un grupo separado aparece varias veces. Las columnas sin grupo dejan un espacio vacio; sin grupos visibles no se agrega ninguna fila. Los limites entre columnas congeladas y desplazables separan los tramos para mantener el scroll alineado. El nombre admite claves de traduccion, igual que `header`.
+
+Se puede modificar con `ColumnMetadataOverrideModel.HeaderGroup`; una cadena vacia elimina el grupo. El ejemplo `/progress` agrupa las tres primeras columnas en `Grupo1` y las dos ultimas en `Grupo2`.
+
 > Versión en español. [Read in English](README.md).
 
 # ECS PrimeNG table

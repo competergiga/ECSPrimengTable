@@ -14,6 +14,8 @@ namespace ECS.PrimengTable.Attributes {
         /// </summary>
         public string Header { get; set; }
 
+        public string? HeaderGroup { get; set; }
+
         /// <summary>
         /// The type of data in the column, used for filtering and formatting.
         /// </summary>

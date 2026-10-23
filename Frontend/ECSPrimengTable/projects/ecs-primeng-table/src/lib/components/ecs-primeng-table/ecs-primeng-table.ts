@@ -175,6 +175,22 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     return this.compactRows ? 56 : (this.tableOptions.rows?.action?.width ?? 150);
   }
 
+  getColumnHeaderGroups(columns: IColumnMetadata[]): { field: string; label: string; colspan: number; frozenColumnAlign: FrozenColumnAlign }[] {
+    if (!columns.some(column => column.headerGroup?.trim())) return [];
+    const groups: { field: string; label: string; colspan: number; frozenColumnAlign: FrozenColumnAlign }[] = [];
+    for (const column of columns) {
+      const label = column.headerGroup?.trim() ?? '';
+      const frozenColumnAlign = column.frozenColumnAlign ?? FrozenColumnAlign.Noone;
+      const previous = groups[groups.length - 1];
+      if (previous && previous.label === label && previous.frozenColumnAlign === frozenColumnAlign) {
+        previous.colspan++;
+      } else {
+        groups.push({ field: column.field, label, colspan: 1, frozenColumnAlign });
+      }
+    }
+    return groups;
+  }
+
   private isInitiallyVisible(column: IColumnMetadata): boolean {
     if (!column.canBeHidden) return true;
     if (column.startHidden) return false;

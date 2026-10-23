@@ -1,6 +1,6 @@
 {
   "name": "@competer/primeng-table",
-  "version":"19.1.8",
+  "version":"19.1.9",
   "description": "Community-maintained fork of ECS. Reusable Angular PrimeNG table component with advanced server-side filters. Designed to offload filtering logic to any backend API.",
   "author": "ECS (Eternal CODE Studio); ComPeter",
   "license": "MIT",
