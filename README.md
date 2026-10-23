@@ -995,6 +995,23 @@ Keep in mind that the initial width **overrides any width saved in views**, so u
 
 
 
+<a id="4315-column-group-headers"></a>
+#### 4.3.15 Column group headers
+
+Columns can share an optional centered header above their individual headers. Consecutive visible columns with the same group label share a spanning header. Hiding or reordering columns recalculates the groups automatically; if another group or an ungrouped column separates them, the label repeats for each separate run.
+
+Ungrouped columns leave a blank space in the group row. If no visible column has a group, the extra row disappears. Frozen alignment boundaries also split groups to keep headers aligned during scrolling. Group labels support translation keys, just like individual column headers.
+
+See [configuration and examples](#6315-column-group-headers).
+
+<p align="center">
+  <img width="1200" height="760" alt="Column group headers: initial group, split after reordering, and merged again after hiding Department" src="docs/images/column-group-headers.png" />
+</p>
+
+Illustrative example: `Name` and `Age` share the **Personal details** header. Moving `Department` between them splits the group; hiding it joins the two visible columns again.
+
+<br><br>
+
 ### 4.4 Row configurations
 The **ECS PrimeNG Table** allows you to configure various settings that control how each row behaves when displayed to users, as well as the actions associated with them.
 
@@ -1620,6 +1637,7 @@ The purpose of this section is to provide a table that maps the features describ
 | Columns | [4.3.12 Filtering](#4312-filtering) | [6.3.12 Filtering](#6312-filtering) |
 | Columns | [4.3.13 Predefined filters](#4313-predefined-filters) | [6.3.13 Predefined filters](#6313-predefined-filters) |
 | Columns | [4.3.14 Initial width](#4314-initial-width) | [6.3.14 Initial width](#6314-initial-width) |
+| Columns | [4.3.15 Column group headers](#4315-column-group-headers) | [6.3.15 Column group headers](#6315-column-group-headers) |
 | Rows | [4.4.1 Single select](#441-single-select) | [6.4.1 Single select](#641-single-select) |
 | Rows | [4.4.2 Checkbox select](#442-checkbox-select) | [6.4.2 Checkbox select](#642-checkbox-select) |
 | Rows | [4.4.3 Dynamic styling](#443-dynamic-styling) | [6.4.3 Dynamic styling](#643-dynamic-styling) |
@@ -2857,6 +2875,64 @@ For non-frozen columns, use it with caution: if the user can resize the column, 
 <br><br>
 
 
+
+<a id="6315-column-group-headers"></a>
+#### 6.3.15 Column group headers
+
+Set the optional `HeaderGroup` property on `ColumnAttributes` for each DTO property that belongs to a group. Use named attribute property syntax (`HeaderGroup = ...`):
+
+```csharp
+using ECS.PrimengTable.Attributes;
+using ECS.PrimengTable.Enums;
+
+public class PersonDto {
+    [ColumnAttributes("Name", HeaderGroup = "groups.personal")]
+    public string Name { get; set; } = "";
+
+    [ColumnAttributes("Age", dataType: DataType.Numeric, HeaderGroup = "groups.personal")]
+    public int Age { get; set; }
+
+    [ColumnAttributes("Department", HeaderGroup = "groups.work")]
+    public string Department { get; set; } = "";
+}
+```
+
+The backend copies the value to `ColumnMetadataModel.HeaderGroup`, serialized as `headerGroup` in the table configuration; null values are omitted from JSON. The frontend property `IColumnMetadata.headerGroup?: string | null` is optional, so existing configurations need no changes. No additional table option is required.
+
+For `Name, Age, Department`, the personal group spans two columns and the work group spans one. Reordering to `Name, Department, Age` produces three headers, repeating the personal label. Hiding `Department` joins the two visible personal columns again. Groups compare trimmed metadata labels and frozen alignment before translating the labels.
+
+Add the labels to the application's ngx-translate dictionaries, for example:
+
+```json
+{
+  "groups": {
+    "personal": "Personal details",
+    "work": "Work details"
+  }
+}
+```
+
+For dynamic groups, pass overrides to `GetTableConfiguration`, using DTO property names as dictionary keys:
+
+```csharp
+using ECS.PrimengTable.Models;
+using ECS.PrimengTable.Services;
+
+var dynamicAttributes = new Dictionary<string, ColumnMetadataOverrideModel> {
+    [nameof(PersonDto.Name)] = new() { HeaderGroup = "groups.personal" },
+    [nameof(PersonDto.Age)] = new() { HeaderGroup = "groups.personal" },
+    [nameof(PersonDto.Department)] = new() { HeaderGroup = "" }
+};
+
+var configuration = EcsPrimengTableService.GetTableConfiguration<PersonDto>(
+    dynamicAttributes: dynamicAttributes);
+```
+
+A null override preserves the attribute value; an empty string removes the group. Null, empty or whitespace-only labels render without a group label.
+
+The `/progress` demo groups its first three columns under `Grupo1` and its last two under `Grupo2`. Hide or reorder columns to check how the spanning headers change. Use frontend and backend packages that include `HeaderGroup` support.
+
+<br><br>
 
 ### 6.4 Rows
 #### 6.4.1 Single select
@@ -4553,6 +4629,7 @@ Marks a property to define its table column behavior in ECS PrimeNG tables. Incl
 | `filterPredefinedValuesName` | `string` | `""` | Name used in TypeScript to store predefined filter values. |
 | `frozenColumnAlign` | [`FrozenColumnAlign`](#716-frozencolumnalign) | `None` | Indicates if the column is frozen and its alignment. |
 | `header` | `string` | `""` | The name displayed for the column in the table. |
+| `HeaderGroup` | `string?` | `null` | Optional group label or translation key. Set with `HeaderGroup = "..."`. |
 | `initialWidth` | `double` | `0` | Initial width of the column in pixels. If <=0 and frozen, defaults to 100. |
 | `sendColumnAttributes` | `bool` | `true` | If true, column attributes will be sent automatically in dynamic queries. |
 | `startHidden` | `bool` | `false` | If true, the column starts hidden (only if `canBeHidden` is true). |
@@ -4648,6 +4725,7 @@ Contains information about the field, header, type, alignment, visibility, filte
 | `FilterPredefinedValuesName` | `string` | Gets or sets the name used in TypeScript to store predefined filter values. |
 | `FrozenColumnAlign` | [`FrozenColumnAlign`](#716-frozencolumnalign) | Gets or sets the alignment of a frozen column. |
 | `Header` | `string` | Gets or sets the header that will be displayed for the column in the table. |
+| `HeaderGroup` | `string?` | Optional group label or translation key; serialized as `headerGroup` and omitted when null. |
 | `InitialWidth` | `double` | Gets or sets the initial width of the column. |
 | `SendColumnAttributes` | `bool` | Gets or sets a value indicating whether column attributes will be sent automatically in dynamic queries. |
 | `StartHidden` | `bool` | Gets or sets a value indicating whether the column starts hidden (if it can be hidden). |
@@ -4687,6 +4765,7 @@ Only non-null properties are applied, allowing partial and targeted overrides.
 | `DateTimezone` | `string?` | Overrides the timezone applied to date values for this column. |
 | `ExportDateFormat` | `string?` | `null` | Overrides the date format for this column in exports. |
 | `Header` | `string?` | Overrides the header displayed for the column. |
+| `HeaderGroup` | `string?` | Overrides the group label. Null preserves the attribute value; an empty string removes the group. |
 | `StartHidden` | `bool?` | Overrides whether the column starts hidden. |
 
 <br><br>
@@ -5315,6 +5394,7 @@ Provides configuration options for column behavior, appearance, and user interac
 | `filterPredefinedValuesName` | `string` | Name of predefined filter values, if any. |
 | `frozenColumnAlign` | [`FrozenColumnAlign`](#815-frozencolumnalign) | Alignment for frozen columns (left or right). |
 | `header` | `string` | The display name of the column header. |
+| `headerGroup?` | `string \| null` | Optional group label or translation key for consecutive visible columns with the same frozen alignment. |
 | `initialWidth` | `number` | Initial width of the column in pixels. |
 | `startHidden` | `boolean` | Determines if the column should initially be hidden. |
 
@@ -5479,6 +5559,12 @@ WIP
 ## 10 Responsive menus and initial column visibility
 
 All new behavior is optional. Without the new settings, existing applications keep their header buttons, row buttons and column visibility. The categories refer to **browser viewport width in CSS pixels**, not hardware or user-agent detection.
+
+<p align="center">
+  <img width="1280" height="820" alt="Responsive menus on mobile and tablet: header actions in a hamburger menu and row actions in a vertical three-dot menu" src="docs/images/responsive-menus.png" />
+</p>
+
+Illustrative example with both options enabled: the left panel shows the header menu opened with **☰**, while the right panel shows a row menu opened with **⋮**. Global search stays visible. The panels show separate states; opening one menu closes the other. Available entries depend on the table configuration and custom buttons.
 
 ### Frontend options
 
