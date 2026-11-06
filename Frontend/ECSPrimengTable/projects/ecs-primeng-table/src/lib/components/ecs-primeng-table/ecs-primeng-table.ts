@@ -32,8 +32,9 @@ import { TablePredefinedFilters } from '../table-predefined-filters/table-predef
 import { TableButton } from '../table-button/table-button';
 import { ColumnSelector } from "../column-selector/column-selector";
 import { ExportExcel } from '../export-excel/export-excel';
-import { finalize, Observable } from 'rxjs';
+import { finalize, firstValueFrom, Observable } from 'rxjs';
 import { ViewsManagement } from "../views-management/views-management";
+import { ITreeRequest, ITreeResponse, TreeRow, TreeTableState } from '../../utils/tree-table-state';
 
 @Component({
   selector: 'ecs-primeng-table',
@@ -85,6 +86,9 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     });
   }
   @Input() tableOptions: ITableOptions = DEFAULT_TABLE_OPTIONS;
+  treeState?: TreeTableState;
+  private treeQuery?: ITableQueryRequest;
+  private treeStateRestored = false;
   @Output() onRowCheckboxChange = new EventEmitter<{
     rowID: any,
     selected: boolean
@@ -105,9 +109,68 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   showExportModal: boolean = false;
   showColumnSelector: boolean = false;
   selectedRowsCheckbox: any[] = []; // An array to keep all the selected rows
+  selectAllLoading = false;
+  private selectionQuery?: ITableQueryRequest;
+  private selectionQueryKey = '';
+  private matchingSelectionKeys?: any[];
   @ViewChild('dt') dt!: Table; // Get the reference to the object table
   
   globalSearchText: string | null = null; // The text used by the global search
+  private appliedGlobalSearchText: string | null = null;
+  private globalSearchManaged = false;
+  private globalSearchTimer?: ReturnType<typeof setTimeout>;
+
+  /** The applied query stays separate from text being typed during the debounce. */
+  get effectiveGlobalSearchText(): string | null {
+    return this.globalSearchManaged ? this.appliedGlobalSearchText : this.globalSearchText;
+  }
+
+  private cancelGlobalSearch(): void {
+    if (this.globalSearchTimer !== undefined) clearTimeout(this.globalSearchTimer);
+    this.globalSearchTimer = undefined;
+  }
+
+  private restoreGlobalSearch(value: string | null): void {
+    this.cancelGlobalSearch();
+    this.globalSearchText = value;
+    this.appliedGlobalSearchText = value || null;
+    this.globalSearchManaged = true;
+  }
+
+  private globalSearchOption(value: number | undefined): number {
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+  }
+
+  onGlobalSearchInput(value: string): void {
+    if (this.destroyed) return;
+    this.cancelGlobalSearch();
+    if (!this.globalSearchManaged) this.appliedGlobalSearchText = this.globalSearchText || null;
+    this.globalSearchManaged = true;
+    this.globalSearchText = value;
+    const minLength = this.globalSearchOption(this.tableOptions.globalFilter?.minLength);
+    const delay = this.globalSearchOption(this.tableOptions.globalFilter?.debounceTime);
+    const trimmed = value.trim();
+    const effective = trimmed.length >= minLength ? (trimmed || null) : null;
+    if (effective === (this.appliedGlobalSearchText?.trim() || null)) return;
+    const apply = () => {
+      this.globalSearchTimer = undefined;
+      if (this.destroyed) return;
+      this.appliedGlobalSearchText = effective;
+      this.currentPage = 0;
+      this.dt.first = 0;
+      if (minLength === 0 && delay === 0) {
+        // Keep PrimeNG's existing filtering behavior when the feature is not configured.
+        this.dt.filterGlobal(value, 'contains');
+      } else {
+        // Own the global delay so it is not added to PrimeNG's column-filter delay.
+        this.dt.filters = { ...this.dt.filters, global: { value: effective, matchMode: 'contains' } };
+        this.fetchTableData({ ...this.tableLazyLoadEventInformation, first: 0,
+          rows: this.currentRowsPerPage, filters: this.dt.filters });
+      }
+    };
+    if (effective === null || delay === 0) apply();
+    else this.globalSearchTimer = setTimeout(apply, delay);
+  }
   tableViewsList: ITableView[] = [];
   tableViews_menuItems: any[] = [];
 
@@ -144,6 +207,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   private maxViews = 0;
   ngOnInit(): void {
     this.i18n.connectPrimeNG();
+    if (this.tableOptions.tree) this.treeState = new TreeTableState(this.tableOptions.tree);
     this.validateStatePersistence();
     this.updateResponsiveViewport();
     this.fetchTableConfiguration();
@@ -298,7 +362,9 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.cancelGlobalSearch();
     this.destroyed = true;
+    this.treeState?.cancel();
     const options = this.tableOptions.statePersistence;
     const key = options?.key?.trim();
     if (!key || !this.stateScope) return;
@@ -315,9 +381,12 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       dataUrl: this.tableOptions.urlTableData ?? '',
       filters,
       multiSortMeta: structuredClone(this.dt.multiSortMeta ?? []),
-      globalSearchText: this.globalSearchText,
+      globalSearchText: this.effectiveGlobalSearchText,
       currentPage: this.currentPage,
-      currentRowsPerPage: this.currentRowsPerPage
+      currentRowsPerPage: this.currentRowsPerPage,
+      treeMode: this.treeState?.mode,
+      treeExpandedKeys: this.treeState ? [...this.treeState.expanded] : undefined,
+      treeChildPages: this.treeState?.snapshotPages()
     });
   }
 
@@ -332,7 +401,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     const state = this.stateScope!.get(key!);
     if (!state) return false;
     if (state.configurationUrl !== this.tableOptions.urlTableConfiguration ||
-        state.dataUrl !== this.tableOptions.urlTableData) {
+      state.dataUrl !== this.tableOptions.urlTableData || state.treeMode !== this.treeState?.mode) {
       this.stateScope!.clear(key!);
       return false;
     }
@@ -345,7 +414,9 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       ? state.currentRowsPerPage : this.currentRowsPerPage;
     this.currentPage = this.currentRowsPerPage === state.currentRowsPerPage
       ? Math.max(0, state.currentPage) : 0;
-    this.globalSearchText = state.globalSearchText;
+    this.restoreGlobalSearch(state.globalSearchText);
+    this.treeState?.restore(state.treeExpandedKeys, state.treeChildPages);
+    this.treeStateRestored = !!this.treeState;
     if (this.globalSearchText) {
       filters['global'] = { value: this.globalSearchText, matchMode: 'contains' };
     }
@@ -571,6 +642,8 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     }
     this.columnSelectionCustomized = true;
     let viewData: ITableViewData = viewToLoad.viewData;
+    this.treeState?.restore(viewData.treeExpandedKeys, viewData.treeChildPages);
+    this.treeStateRestored = !!this.treeState;
     this.columnsSelected = viewData.columnsShown
         .map(data => this.columns.find((col: any) => col.field === data.field))
         .filter((col): col is IColumnMetadata => col !== undefined)
@@ -578,7 +651,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     this.tableOptions.columns!.shown = this.tableService.orderColumnsWithFrozens(this.columnsCantBeHidden.concat(this.columnsSelected));
     this.currentPage = viewData.currentPage;
     this.currentRowsPerPage = viewData.currentRowsPerPage;
-    this.globalSearchText = viewData.globalSearchText;
+    this.restoreGlobalSearch(viewData.globalSearchText);
     this.tableOptions.isActive = false;
     this.tableLazyLoadEventInformation.multiSortMeta = [...(viewData.multiSortMeta ?? [])];
     this.dt.multiSortMeta = [...(viewData.multiSortMeta ?? [])];
@@ -604,7 +677,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       this.notification.showToast("error", this.i18n.text("NO MORE VIEWS ALLOWED"), this.i18n.text("You have created the maximum number of allowed views for this table"));
       return;
     }
-    let viewData: ITableViewData = this.tableService.viewGenerateData(this.dt, this.globalSearchText, this.currentPage, this.currentRowsPerPage, this.modifyFiltersWithoutGlobalAndSelectedRows.bind(this))
+    let viewData: ITableViewData = this.generateViewData();
     let newView: ITableView = {
       lastActive: false,
       viewAlias: viewAlias,
@@ -652,7 +725,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       this.notification.showToast("error", this.i18n.text("Table view not found"), this.i18n.text("The table view to update data from was not found."));
       return;
     }
-    let viewData: ITableViewData = this.tableService.viewGenerateData(this.dt, this.globalSearchText, this.currentPage, this.currentRowsPerPage, this.modifyFiltersWithoutGlobalAndSelectedRows.bind(this))
+    let viewData: ITableViewData = this.generateViewData();
     this.tableViewsList[index].viewData = viewData;
     this.viewsSave(1);
   }
@@ -737,13 +810,38 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       pageSize: this.currentRowsPerPage, // Set the number of rows per page
       sort: this.tableLazyLoadEventInformation.multiSortMeta, // Set the sorting information
       filter: filtersWithoutGlobalAndSelectedRows, // Set the filters excluding the global filter
-      globalFilter: this.globalSearchText, // Set the global filter text
+      globalFilter: this.effectiveGlobalSearchText, // Use the applied query, not pending input
       columns: this.tableOptions.columns!.shown!.map(col => col.field), // Set the columns to show
       dateFormat: this.dateFormat,
       dateTimezone: this.dateTimezone,
       dateCulture: this.dateCulture,
       exportDateFormat: this.exportDateFormat
     };
+    const selectionKey = JSON.stringify({ ...requestData, page: 0, pageSize: 0, sort: null });
+    if (selectionKey !== this.selectionQueryKey) this.matchingSelectionKeys = undefined;
+    this.selectionQueryKey = selectionKey;
+    this.selectionQuery = structuredClone(requestData);
+    if (this.treeState) {
+      const tree = this.treeState;
+      if (!this.treeStateRestored) tree.restore([...tree.expanded], tree.snapshotPages());
+      this.treeStateRestored = false;
+      const structural = [tree.options.keyExpr, tree.options.parentIdExpr, tree.options.hasItemsExpr, 'rowID'];
+      requestData.columns = [...new Set([...requestData.columns!, ...structural.filter((field): field is string => !!field)])];
+      this.treeQuery = structuredClone(requestData);
+      const loading = tree.load(this.currentPage, this.currentRowsPerPage, this.treeFetcher(requestData));
+      this.tableOptions.data = [];
+      loading.then(updated => {
+        if (updated && !this.destroyed) this.syncTreeRows();
+      }).catch(error => {
+        if (!this.destroyed) this.tableService.handleTableError(error, 'Tree data error');
+      }).finally(() => {
+        if (!this.destroyed) {
+          this.changeDetector?.markForCheck();
+          this.onDataEndUpdate.emit();
+        }
+      });
+      return;
+    }
     this.tableService.fetchTableData(this.tableOptions.urlTableData!, requestData)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -759,9 +857,6 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   }
 
   modifyFiltersWithoutGlobalAndSelectedRows(filters: any, overrideOption: number = -1): any {
-    if (this.globalSearchText === "") { // If the global search text is an empty string
-      this.globalSearchText = null; // Set it to null
-    }
     let filtersWithoutGlobalAndSelectedRows = structuredClone(filters ?? {}); // Create a copy of filters to delete the global.
     if (filtersWithoutGlobalAndSelectedRows.hasOwnProperty('global')) { // If there is an entry with the global filter
       delete filtersWithoutGlobalAndSelectedRows['global']; // Remove the global filter
@@ -771,8 +866,11 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   }
 
   resetTableView(): void {
+    this.cancelGlobalSearch();
     const key = this.tableOptions.statePersistence?.key?.trim();
     if (key) this.stateScope?.clear(key);
+    this.treeState?.restore();
+    this.treeStateRestored = !!this.treeState;
     this.initialStateApplied = false;
     this.tableViewCurrentSelectedAlias = '';
     this.fetchTableConfiguration(true);
@@ -843,7 +941,72 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     this.currentPage = body.page; // Update the current page
   }
 
+  private generateViewData(): ITableViewData {
+    const view = this.tableService.viewGenerateData(this.dt, this.effectiveGlobalSearchText, this.currentPage,
+      this.currentRowsPerPage, this.modifyFiltersWithoutGlobalAndSelectedRows.bind(this));
+    if (this.treeState) {
+      view.treeExpandedKeys = [...this.treeState.expanded];
+      view.treeChildPages = this.treeState.snapshotPages();
+    }
+    return view;
+  }
+
+  private treeFetcher(query: ITableQueryRequest): (request: ITreeRequest) => Promise<ITreeResponse> {
+    return async request => {
+      const response = await firstValueFrom(this.tableService.fetchTableData(this.tableOptions.urlTableData!,
+        { ...structuredClone(query), ...request }).pipe(takeUntilDestroyed(this.destroyRef)));
+      if (!response.body) throw new Error('Empty tree response.');
+      return response.body as ITreeResponse;
+    };
+  }
+
+  private syncTreeRows(): void {
+    const tree = this.treeState!;
+    this.tableOptions.data = tree.visible;
+    this.totalRecords = tree.totalRecords;
+    this.totalRecordsNotFiltered = tree.totalRecordsNotFiltered;
+    this.currentPage = tree.page;
+    this.changeDetector?.markForCheck();
+  }
+
+  async toggleTreeRow(event: Event, row: TreeRow): Promise<void> {
+    event.stopPropagation();
+    if (!this.treeState || !this.treeQuery || this.treeState.loading) return;
+    try {
+      const update = this.treeState.toggle(row, this.treeFetcher(this.treeQuery));
+      this.changeDetector?.markForCheck();
+      await update;
+      if (!this.destroyed) this.syncTreeRows();
+    } catch (error) {
+      if (!this.destroyed) this.tableService.handleTableError(error, 'Tree data error');
+    } finally {
+      if (!this.destroyed) { this.changeDetector?.markForCheck(); this.onDataEndUpdate.emit(); }
+    }
+  }
+
+  async loadMoreTreeRows(event: Event, row: TreeRow): Promise<void> {
+    event.stopPropagation();
+    if (!this.treeState || !this.treeQuery || this.treeState.loading) return;
+    try {
+      await this.treeState.loadMore(row, this.treeFetcher(this.treeQuery));
+      if (!this.destroyed) this.syncTreeRows();
+    } catch (error) {
+      if (!this.destroyed) this.tableService.handleTableError(error, 'Tree data error');
+    }
+  }
+
+  get treeColumn(): string | undefined {
+    const columns = this.tableOptions.columns?.shown ?? [];
+    return columns.find(column => column.field === this.treeState?.options.column)?.field ?? columns[0]?.field;
+  }
+
+  treePageChange(event: { first?: number; rows?: number }): void {
+    this.fetchTableData({ ...this.tableLazyLoadEventInformation, first: event.first ?? 0,
+      rows: event.rows ?? this.currentRowsPerPage });
+  }
+
   clearFilters(dt: Table, force: boolean = false, onlyGlobalFilter: boolean = false): void{
+    this.cancelGlobalSearch();
     let hasToClear = this.hasToClearFilters(dt, this.globalSearchText, force);
     if(hasToClear){
       if(!onlyGlobalFilter){
@@ -868,8 +1031,15 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
         );
         this.dt.filters = filters;
       }
-      this.globalSearchText = null;
-      dt.filterGlobal('','');
+      this.restoreGlobalSearch(null);
+      if (this.globalSearchOption(this.tableOptions.globalFilter?.minLength) > 0 ||
+          this.globalSearchOption(this.tableOptions.globalFilter?.debounceTime) > 0) {
+        this.currentPage = 0;
+        dt.first = 0;
+        dt.filters = { ...dt.filters, global: { value: null, matchMode: 'contains' } };
+        this.fetchTableData({ ...this.tableLazyLoadEventInformation, first: 0,
+          rows: this.currentRowsPerPage, filters: dt.filters });
+      } else dt.filterGlobal('','');
     }
   }
 
@@ -1007,9 +1177,53 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     return this.selectedRowsCheckbox.includes(rowID);
   }
 
+  get allMatchingRowsSelected(): boolean {
+    if (!this.matchingSelectionKeys?.length) return false;
+    const selected = new Set(this.selectedRowsCheckbox);
+    return this.matchingSelectionKeys.every(key => selected.has(key));
+  }
+
+  get matchingRowsPartiallySelected(): boolean {
+    if (this.allMatchingRowsSelected) return false;
+    if (!this.matchingSelectionKeys) return this.selectedRowsCheckbox.length > 0;
+    const selected = new Set(this.selectedRowsCheckbox);
+    return this.matchingSelectionKeys.some(key => selected.has(key));
+  }
+
+  async toggleAllMatchingRows(checked: boolean): Promise<void> {
+    const options = this.tableOptions.rows?.checkboxSelector;
+    if (!options?.enabled || !options.selectAllEnabled || !options.urlSelectAll ||
+        !this.selectionQuery || this.selectAllLoading) return;
+    const queryKey = this.selectionQueryKey;
+    this.selectAllLoading = true;
+    try {
+      const response = await firstValueFrom(this.tableService.fetchSelectionKeys(options.urlSelectAll,
+        structuredClone(this.selectionQuery)).pipe(takeUntilDestroyed(this.destroyRef)));
+      if (this.destroyed || queryKey !== this.selectionQueryKey) return;
+      if (!Array.isArray(response.body) || response.body.some(key =>
+          typeof key !== 'string' && typeof key !== 'number')) throw new Error('Invalid selection identifiers.');
+      const disabledKeys = new Set((this.tableOptions.data ?? [])
+        .filter(row => !(options.enabledCondition?.(row) ?? true)).map(row => row.rowID));
+      const keys = [...new Set(response.body)].filter(key => !disabledKeys.has(key));
+      this.matchingSelectionKeys = keys;
+      const selected = new Set(this.selectedRowsCheckbox);
+      const changed = keys.filter(key => selected.has(key) !== checked);
+      for (const key of changed) {
+        if (checked) selected.add(key); else selected.delete(key);
+      }
+      this.selectedRowsCheckbox = [...selected];
+      for (const rowID of changed) this.onRowCheckboxChange.emit({ rowID, selected: checked });
+    } catch (error) {
+      if (!this.destroyed) this.tableService.handleTableError(error, 'Selection error');
+    } finally {
+      this.selectAllLoading = false;
+      this.changeDetector?.markForCheck();
+    }
+  }
+
   onRowChekboxChange(event: any, rowID: any): void {
     if (event.checked) { // Add the selected item
-        this.selectedRowsCheckbox.push(rowID);
+        if (!this.selectedRowsCheckbox.includes(rowID)) this.selectedRowsCheckbox.push(rowID);
     } else { // Remove the selected item
         this.selectedRowsCheckbox = this.selectedRowsCheckbox.filter(selectedId => selectedId !== rowID);
     }
@@ -1148,7 +1362,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       pageSize: this.currentRowsPerPage, // Set the number of rows per page
       sort: this.tableLazyLoadEventInformation.multiSortMeta, // Set the sorting information
       filter: filtersWithoutGlobalAndSelectedRows, // Set the filters excluding the global filter
-      globalFilter: this.globalSearchText, // Set the global filter text
+      globalFilter: this.effectiveGlobalSearchText, // Use the applied query, not pending input
       columns: this.tableOptions.columns!.shown!.map(col => col.field), // Set the columns to show
       dateFormat: this.dateFormat,
       dateTimezone: this.dateTimezone,
@@ -1160,6 +1374,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       filename: event.filename,
       useIconInBools: event.useIconInBools
     };
+    if (this.treeState) Object.assign(requestData, { expandedKeys: [...this.treeState.expanded] });
     this.tableService.fetchExcelReport(this.tableOptions.excelReport.url, requestData).subscribe({
       next: (response: HttpResponse<Blob>) => {
         this.tableService.downloadFile(response.body!, event.filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

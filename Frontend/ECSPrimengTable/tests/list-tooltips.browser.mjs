@@ -23,7 +23,7 @@ try {
  const page = await browser.newPage({ viewport: { width: 1600, height: 844 } });
  const errors = []; page.on('pageerror', error => errors.push(error.message));
 
- const { DataType } = await import('../dist/ecs-primeng-table/fesm2022/eternalcodestudio-primeng-table.mjs');
+ const { DataType } = await import('../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs');
  const columnsInfo = [
   {field:'tags', filterPredefinedValuesName:'employmentStatusPredefinedFilterList', dataTooltipCustomColumnSource:'tips'},
   {field:'plain', dataTooltipCustomColumnSource:'tips'},

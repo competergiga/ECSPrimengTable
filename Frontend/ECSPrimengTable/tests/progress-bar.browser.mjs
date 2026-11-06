@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { fullDemoFixture, queryFixture } from './full-demo.fixture.mjs';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const { CellDisplay, DataType } = await import('../dist/ecs-primeng-table/fesm2022/eternalcodestudio-primeng-table.mjs');
+const { CellDisplay, DataType } = await import('../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs');
 const root = resolve('dist/ECSPrimengTable/browser');
 const server = createServer(async (req, res) => {
   const path = resolve(root, '.' + new URL(req.url, 'http://localhost').pathname);

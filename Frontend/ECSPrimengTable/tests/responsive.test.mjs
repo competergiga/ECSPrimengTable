@@ -2,7 +2,7 @@ import '@angular/compiler';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createEnvironmentInjector, runInInjectionContext } from '@angular/core';
-import { ECSPrimengTableI18nService, ECSPrimengTable, createTableOptions, DeviceType, FrozenColumnAlign } from '../dist/ecs-primeng-table/fesm2022/eternalcodestudio-primeng-table.mjs';
+import { ECSPrimengTableI18nService, ECSPrimengTable, createTableOptions, DeviceType, FrozenColumnAlign } from '../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs';
 
 test('header groups follow contiguous visible columns after reorder and hiding', () => {
   const x = setup();

@@ -6,7 +6,7 @@
         [reorderableColumns]="true"
         [scrollable]="true" [scrollHeight]="scrollHeightValue"
         [columns]="tableOptions.columns?.shown ?? []" [value]="tableOptions.data ?? []" dataKey="rowID" 
-        [paginator]="true" paginatorDropdownAppendTo="body" [first]="currentPage * currentRowsPerPage" [rows]="currentRowsPerPage" [totalRecords]="totalRecords"
+        [paginator]="!treeState" [loading]="treeState?.loading ?? false" paginatorDropdownAppendTo="body" [first]="currentPage * currentRowsPerPage" [rows]="currentRowsPerPage" [totalRecords]="totalRecords"
         [rowsPerPageOptions]="allowedRowsPerPage" [showCurrentPageReport]="false" (onPage)="pageChange($event)"
         [metaKeySelection]="true" [selectionMode]="tableOptions.rows?.singleSelector?.enabled ? 'single' : null" [metaKeySelection]="tableOptions.rows?.singleSelector?.metakey" [(selection)]="rowSelection" (onRowSelect)="rowSelect($event)" (onRowUnselect)="rowUnselect($event)"
         [lazy]="true" (onLazyLoad)="fetchTableData($event)">
@@ -70,6 +70,14 @@
                 id="rowSelector-header"  [attr.scope]="'col'" pResizableColumn [pResizableColumnDisabled]="!tableOptions.rows?.checkboxSelector?.resizable" pFrozenColumn 
                 [frozen]="tableOptions.rows?.checkboxSelector?.frozen ?? false" [alignFrozen]="getFrozenColumnAlignAsText(tableOptions.rows?.checkboxSelector?.positionRight ? FrozenColumnAlign.Right : FrozenColumnAlign.Left)">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                        @if (tableOptions.rows?.checkboxSelector?.selectAllEnabled) {
+                            <p-checkbox [binary]="true" [ngModel]="allMatchingRowsSelected"
+                                [indeterminate]="matchingRowsPartiallySelected"
+                                [disabled]="selectAllLoading || !tableOptions.rows?.checkboxSelector?.urlSelectAll"
+                                [ariaLabel]="'Select all filtered rows' | ecsTranslate"
+                                [pTooltip]="'Select all filtered rows' | ecsTranslate"
+                                (onChange)="toggleAllMatchingRows($event.checked)"/>
+                        }
                         {{ (tableOptions.rows?.checkboxSelector?.header ?? '') | ecsTranslate }}
                         <p-columnFilter type="boolean" field="selector" display="menu" [showButtons]="false"/>
                     </div>
@@ -105,8 +113,8 @@
                         <p-iconField iconPosition="left" class="ecs-responsive-search">
                             <p-inputIcon><i class="pi pi-search"></i></p-inputIcon>
                             <input pInputText type="text" [attr.aria-label]="'Search keyword' | ecsTranslate" [placeholder]="'Search keyword' | ecsTranslate" autocomplete="off"
-                                [maxlength]="tableOptions.globalFilter?.maxLength ?? null" [(ngModel)]="globalSearchText"
-                                (input)="dt.filterGlobal($any($event.target).value, 'contains')"/>
+                                [maxlength]="tableOptions.globalFilter?.maxLength ?? null" [ngModel]="globalSearchText"
+                                (ngModelChange)="onGlobalSearchInput($event)"/>
                             @if (globalSearchText) {
                                 <p-inputIcon position="right"><button type="button" class="ecs-clear-search" [attr.aria-label]="'Clear search' | ecsTranslate" (click)="clearFilters(dt, true, true)"><i class="pi pi-times"></i></button></p-inputIcon>
                             }
@@ -172,8 +180,8 @@
                                 <i class="pi pi-search"></i>
                             </p-inputIcon>
                             <input pInputText type="text" 
-                                (input)="dt.filterGlobal($any($event.target).value, 'contains')"  autocomplete="off" 
-                                [maxlength]="tableOptions.globalFilter?.maxLength ?? null" [placeholder]="'Search keyword' | ecsTranslate" [(ngModel)]="globalSearchText"
+                                (ngModelChange)="onGlobalSearchInput($event)" autocomplete="off"
+                                [maxlength]="tableOptions.globalFilter?.maxLength ?? null" [placeholder]="'Search keyword' | ecsTranslate" [ngModel]="globalSearchText"
                                 style="width: 220px;"/>
                             <!-- Right icon (only if there is text) -->
                             @if (globalSearchText) {
@@ -307,7 +315,17 @@
 
         <!-- LOGIC FOR DRAWING TABLE DATA WHEN THERE IS CONTENTS -->
         <ng-template #body let-rowData let-columns="columns"> 
-            <tr [pSelectableRow]="rowData" [ngClass]="tableOptions.rows?.class?.(rowData)" [ngStyle]="tableOptions.rows?.style?.(rowData)">
+            @if (treeState?.isMore(rowData)) {
+                <tr class="ecs-tree-more-row">
+                    <td colspan="999">
+                        <p-button icon="pi pi-plus" [text]="true" [label]="'Load more children' | ecsTranslate"
+                            (onClick)="loadMoreTreeRows($event, rowData)" />
+                    </td>
+                </tr>
+            } @else {
+            <tr [pSelectableRow]="rowData" [ngClass]="tableOptions.rows?.class?.(rowData)" [ngStyle]="tableOptions.rows?.style?.(rowData)"
+                [attr.aria-level]="treeState ? treeState.depth(rowData) + 1 : null"
+                [attr.aria-expanded]="treeState?.hasChildren(rowData) ? treeState?.isExpanded(rowData) : null">
                 @if (!tableOptions.rows?.action?.positionRight) {
                     <ng-container *ngTemplateOutlet="actionColumnTemplate; context: { rowData: rowData }"></ng-container>
                 }
@@ -318,9 +336,26 @@
                     <td (mousedown)="col.dataType !== DataType.Boolean && copyToClipboardStart($event)" (mouseup)="copyToClipboardCancel()"
                         [ngStyle]="getColumnStyle(col)" pFrozenColumn [frozen]="col.frozenColumnAlign === FrozenColumnAlign.Left || col.frozenColumnAlign === FrozenColumnAlign.Right" 
                         [alignFrozen]="getFrozenColumnAlignAsText(col.frozenColumnAlign)" [style.text-align]="getDataAlignHorizontalAsText(col.dataAlignHorizontal)" [style.vertical-align]="getDataAlignVerticalAsText(col.dataAlignVertical)">
-                        <ecs-table-cell [col]="col" [rowData]="rowData" [globalSearchText]="globalSearchText" 
+                        @if (treeState && col.field === treeColumn) {
+                            <div class="ecs-tree-cell" [style.padding-inline-start.px]="treeState.depth(rowData) * 20">
+                                <button type="button" class="ecs-tree-toggle" [class.ecs-tree-leaf]="!treeState.hasChildren(rowData)"
+                                    [disabled]="!treeState.hasChildren(rowData) || treeState.isLoading(rowData) || treeState.loading"
+                                    [attr.aria-label]="(treeState.isExpanded(rowData) ? 'Collapse node' : 'Expand node') | ecsTranslate"
+                                    [attr.aria-expanded]="treeState.hasChildren(rowData) ? treeState.isExpanded(rowData) : null"
+                                    [pTooltip]="(treeState.isExpanded(rowData) ? 'Collapse node' : 'Expand node') | ecsTranslate"
+                                    (mousedown)="$event.stopPropagation()" (mouseup)="$event.stopPropagation()"
+                                    (click)="toggleTreeRow($event, rowData)">
+                                    <i [class]="treeState.isLoading(rowData) ? 'pi pi-spinner pi-spin' : treeState.isExpanded(rowData) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" aria-hidden="true"></i>
+                                </button>
+                                <ecs-table-cell [col]="col" [rowData]="rowData" [globalSearchText]="effectiveGlobalSearchText"
+                                    [dateFormat]="dateFormat" [dateTimezone]="dateTimezone" [dateCulture]="dateCulture"
+                                    [predefinedFiltersCollection]="tableOptions.predefinedFilters" />
+                            </div>
+                        } @else {
+                        <ecs-table-cell [col]="col" [rowData]="rowData" [globalSearchText]="effectiveGlobalSearchText"
                             [dateFormat]="dateFormat" [dateTimezone]="dateTimezone" [dateCulture]="dateCulture"
                             [predefinedFiltersCollection]="tableOptions.predefinedFilters"/>
+                        }
                     </td>
                 }
                 @if (tableOptions.rows?.checkboxSelector?.enabled && tableOptions.rows?.checkboxSelector?.positionRight) {
@@ -330,6 +365,7 @@
                     <ng-container *ngTemplateOutlet="actionColumnTemplate; context: { rowData: rowData }"></ng-container>
                 }
             </tr>
+            }
         </ng-template>
 
         <!-- LOGIC FOR DRAWING TABLE DATA WHEN THERE IS NO CONTENTS -->
@@ -354,6 +390,17 @@
             </div>
         </ng-template>
     </p-table>
+    @if (treeState) {
+        <div #paginatorContainer class="ecs-tree-paginator">
+            @if (tableOptions.legend?.content) {
+                <ecs-table-button [button]="tableOptions.legend?.button" [rowData]="null" [overrideAction]="treeLegend.toggle.bind(treeLegend)" />
+                <p-popover #treeLegend><div [innerHTML]="(tableOptions.legend?.content) | ecsTranslate"></div></p-popover>
+            }
+            <span>{{ 'Showing {{count}} root nodes of {{total}} available root nodes' | ecsTranslate: { count: totalRecords, total: totalRecordsNotFiltered } }}</span>
+            <p-paginator [first]="currentPage * currentRowsPerPage" [rows]="currentRowsPerPage" [totalRecords]="totalRecords"
+                [rowsPerPageOptions]="allowedRowsPerPage" dropdownAppendTo="body" (onPageChange)="treePageChange($event)" />
+        </div>
+    }
 </div>
 <ecs-column-selector [visible]="showColumnSelector" [columnModalData]="columnModalData" [filteredColumnData]="filteredColumnData" [orderByHeader]="tableOptions.columns?.selectorOrderByColumnName === true" (visibleChange)="showColumnSelector=false" (applyChanges)="applyColumnModalChanges($event)"/>
 <ecs-export-excel [visible]="showExportModal" [rowCheckboxSelectorActive]="tableOptions.rows?.checkboxSelector?.enabled ?? false" [excelReportTitle]="excelReportTitle" [allowTitleUserEdit]="tableOptions.excelReport?.titleAllowUserEdit ?? false" (visibleChange)="showExportModal=false" (exportToExcel)="generateExcelReport($event)"/>

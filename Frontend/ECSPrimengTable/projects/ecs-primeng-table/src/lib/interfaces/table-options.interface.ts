@@ -1,8 +1,11 @@
 import { DataAlignHorizontal, DataAlignVertical, TableViewSaveMode } from "../enums";
 import { IColumnMetadata, IPredefinedFilter, ITableButton } from "../interfaces";
+import { ITreeTableOptions } from '../utils/tree-table-state';
 
 /** Configuration options for ECS Primeng table */
 export interface ITableOptions {
+    tree?: ITreeTableOptions;
+
     /** Optional responsive behavior. Existing applications keep their current buttons by default. */
     responsive?: {
         /** CSS viewport width where Tablet starts. Default: 768. */
@@ -337,6 +340,13 @@ export interface ITableOptions {
          * Configurations related to the row checkbox selector.
          */
         checkboxSelector?: {
+            /** Show a header checkbox selecting all filtered rows across every page. Default: false. Requires urlSelectAll. */
+            selectAllEnabled?: boolean;
+            /** POST endpoint receiving ITableQueryRequest and returning an array of selectable rowID values.
+             * Must apply the same filters and authorization as the data endpoint, without pagination.
+             * If enabledCondition is used, enforce equivalent eligibility here for unloaded rows.
+             */
+            urlSelectAll?: string;
             /**
              * If `true`, a new column with checkboxes will be displayed. Users can select or unselect rows using these checkboxes. Additionally an option to filter by this column will be enabled.
              * 
@@ -466,6 +476,10 @@ export interface ITableOptions {
 
     /** Configurations related to the global filter functionality of the table. */
     globalFilter?: {
+        /** Minimum trimmed input length before searching. Optional; default: 0. */
+        minLength?: number;
+        /** Milliseconds without typing before searching. Optional; default: 0 (existing behavior). */
+        debounceTime?: number;
         /**
          * Enables or disables the global filter input.
          * 
@@ -701,6 +715,8 @@ export const DEFAULT_TABLE_OPTIONS: ITableOptions = {
         },
         checkboxSelector: {
             enabled: false,
+            selectAllEnabled: false,
+            urlSelectAll: undefined,
             header: "Selected",
             positionRight: false,
             width: 150,
@@ -722,6 +738,8 @@ export const DEFAULT_TABLE_OPTIONS: ITableOptions = {
     },
     globalFilter: {
         enabled: true,
+        minLength: 0,
+        debounceTime: 0,
         maxLength: 20
     },
     predefinedFilters: {},

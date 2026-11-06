@@ -6,7 +6,7 @@ import { createEnvironmentInjector } from '@angular/core';
 import { TranslateService, TranslateDefaultParser } from '@ngx-translate/core';
 import { PrimeNG } from 'primeng/config';
 import { Subject } from 'rxjs';
-import { ECSPrimengTableI18nService } from '../dist/ecs-primeng-table/fesm2022/eternalcodestudio-primeng-table.mjs';
+import { ECSPrimengTableI18nService } from '../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs';
 
 test('missing providers retain English and interpolate counter defaults', () => {
  const injector = createEnvironmentInjector([ECSPrimengTableI18nService]);
