@@ -6,14 +6,14 @@ Esta guía explica cómo migrar una aplicación existente desde los paquetes npm
 
 | Plataforma | Paquete original | Paquete ComPeter | Versión declarada en esta rama |
 | --- | --- | --- | --- |
-| Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.1.9` |
-| .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.1.4` |
+| Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.2.0` |
+| .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.2.0` |
 
 Estas son las versiones declaradas en el repositorio; no se ha verificado que sean las últimas disponibles en los registros de paquetes. Consulta el [manifiesto npm](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) y el [proyecto .NET](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj).
 
 El cambio de nombre de los paquetes no cambia los nombres de las clases exportadas de Angular, el selector del componente ni los espacios de nombres de C#. El método que genera la configuración y sus modelos de respuesta son iguales en las ramas comparadas.
 
-Sin embargo, la rama `Angular19` ha avanzado hasta npm `19.2.0` y NuGet `8.2.0`. `Angular19-publish` no incluye las funcionalidades posteriores de tabla en árbol y selección. Pasar de esas versiones más recientes a las indicadas arriba no es una actualización con funcionalidades equivalentes. Antes de migrar, comprueba si tu aplicación utiliza esas funcionalidades.
+Tras el merge de `Angular19`, `Angular19-publish` incluye las funcionalidades opcionales de tabla en árbol y selección en npm `19.2.0` y NuGet `8.2.0`. Migrar a estas versiones ya no implica renunciar a esas funcionalidades. Las tablas planas existentes no necesitan activar el modo árbol; las aplicaciones que lo utilicen deben verificar sus endpoints de árbol, modos de carga, selección y vistas guardadas después de migrar.
 
 ## 1. Sustituir la dependencia npm
 
@@ -21,7 +21,7 @@ Ejecuta estos comandos desde el directorio del paquete de tu aplicación Angular
 
 ```powershell
 npm uninstall @eternalcodestudio/primeng-table
-npm install @competer/primeng-table@19.1.9
+npm install @competer/primeng-table@19.2.0
 ```
 
 Incluye en la migración los cambios resultantes en las dependencias y en el archivo de bloqueo. Actualiza también las librerías internas que todavía dependan del paquete original.
@@ -47,6 +47,8 @@ Los nombres de los símbolos exportados se mantienen. Aplica este cambio a compo
 Si tu aplicación importa desde `ecs-primeng-table`, comprueba cómo se resuelve ese nombre. La aplicación de ejemplo del repositorio lo utiliza como alias de TypeScript para la librería compilada localmente; no es el nombre del paquete ComPeter publicado. Al pasar al paquete npm, sustituye también esos imports por `@competer/primeng-table`.
 
 Revisa `compilerOptions.paths` en la configuración de TypeScript. Elimina o actualiza las asignaciones que todavía resuelvan la librería hacia una copia antigua del código fuente o una compilación dentro de `dist`. No redirijas `@competer/primeng-table` a una copia local desactualizada.
+
+Si las pruebas o los scripts de desarrollo cargan directamente el bundle FESM compilado, su nombre ha cambiado de `eternalcodestudio-primeng-table.mjs` a `competer-primeng-table.mjs` dentro de `dist/ecs-primeng-table/fesm2022`. Actualiza esas rutas y recompila antes de ejecutar las pruebas. Los imports de la aplicación deben utilizar el nombre público del paquete, no una ruta fija al bundle.
 
 ## 3. Usar el mismo paquete en proveedores y adaptadores
 
@@ -92,7 +94,7 @@ La tabla lee la configuración desde `response.body`. No añadas una transformac
 En cada proyecto que referencie directamente el paquete original, sustituye su `PackageReference` por:
 
 ```xml
-<PackageReference Include="ComPeter.PrimeNGTable" Version="8.1.4" />
+<PackageReference Include="ComPeter.PrimeNGTable" Version="8.2.0" />
 ```
 
 Elimina la referencia antigua a `ECS.PrimeNGTable`. Si tu solución utiliza gestión centralizada de paquetes, actualiza la entrada `PackageVersion` correspondiente y las referencias de los proyectos, en lugar de añadir la versión directamente a cada proyecto.

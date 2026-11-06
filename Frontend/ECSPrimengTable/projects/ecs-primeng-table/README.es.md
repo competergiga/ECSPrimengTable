@@ -3,7 +3,7 @@
 Sin `tree`, la tabla plana no cambia. Activa la jerarquía sobre registros planos:
 
 ```ts
-import { createTableOptions } from '@eternalcodestudio/primeng-table';
+import { createTableOptions } from '@competer/primeng-table';
 
 readonly tableOptions = createTableOptions({
   tree: {
@@ -69,7 +69,7 @@ Traduce `Expand node`, `Collapse node`, `Load more children` y
 de la aplicación. Sin proveedores ngx-translate se utilizan etiquetas en inglés.
 
 Consulta la guía paso a paso y una captura del ejemplo en ejecución en
-[Probar la demo del árbol](https://github.com/AIO1/ECSPrimengTable/blob/HEAD/README.es.md#probar-la-demo-del-árbol).
+[Probar la demo del árbol](https://github.com/competergiga/ECSPrimengTable/blob/Angular19-publish/README.es.md#probar-la-demo-del-árbol).
 El ejemplo muestra los tres modos de carga, los filtros profundos, las vistas
 guardadas y la vuelta desde un detalle conservando las ramas abiertas.
 
@@ -93,9 +93,9 @@ Se puede modificar con `ColumnMetadataOverrideModel.HeaderGroup`; una cadena vac
 
 # ECS PrimeNG table
 
-Este paquete NPM contiene ECS PrimeNG Table.  
-Para consultar la documentación completa, las instrucciones de uso, los ejemplos y las actualizaciones, visita el repositorio oficial de GitHub:
-[https://github.com/AIO1/ECSPrimengTable](https://github.com/AIO1/ECSPrimengTable)
+Este paquete npm, `@competer/primeng-table`, contiene un fork de ECS PrimeNG Table.
+Para consultar la documentación completa, las instrucciones de uso, los ejemplos y las actualizaciones, visita la rama de publicación del repositorio de ComPeter:
+[https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish](https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish)
 
 > **Nota:** Consulta el README de GitHub para obtener instrucciones detalladas sobre cómo integrar y utilizar este componente en tus proyectos.
 

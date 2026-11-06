@@ -3,7 +3,7 @@
 Omit `tree` to keep the flat grid unchanged. Opt in with ordinary flat records:
 
 ```ts
-import { createTableOptions } from '@eternalcodestudio/primeng-table';
+import { createTableOptions } from '@competer/primeng-table';
 
 readonly tableOptions = createTableOptions({
   tree: {
@@ -67,7 +67,7 @@ Translate `Expand node`, `Collapse node`, `Load more children` and
 application's dictionaries. Without ngx-translate providers they remain English.
 
 For a step-by-step walkthrough and a screenshot of the running example, see
-[Try the tree demo](https://github.com/AIO1/ECSPrimengTable#try-the-tree-demo).
+[Try the tree demo](https://github.com/competergiga/ECSPrimengTable/blob/Angular19-publish/README.md#try-the-tree-demo).
 The example shows the three load modes, deep filtering, saved views and returning
 from a detail route without losing the expanded branches.
 

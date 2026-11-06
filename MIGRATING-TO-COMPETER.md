@@ -6,14 +6,14 @@ This guide covers migrating an existing application from the original ECS npm an
 
 | Platform | Original package | ComPeter package | Version declared in this branch |
 | --- | --- | --- | --- |
-| Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.1.9` |
-| .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.1.4` |
+| Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.2.0` |
+| .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.2.0` |
 
 These are the versions declared in the repository, not a verification of the latest versions available in the package registries. See the [npm manifest](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) and [.NET project](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj).
 
 The package rename does not rename the exported Angular classes, the component selector, or the C# namespaces. The configuration-generation method and its response models are unchanged between the compared branches.
 
-However, the current `Angular19` branch has advanced to npm `19.2.0` and NuGet `8.2.0`. `Angular19-publish` does not include its later tree-table and selection features. Moving from those newer versions to the versions above is not a feature-equivalent upgrade. Check whether your application uses those features before migrating.
+Following the merge from `Angular19`, `Angular19-publish` includes the optional tree-table and selection features in npm `19.2.0` and NuGet `8.2.0`. Migrating to these versions no longer requires giving up those features. Existing flat tables do not need to enable tree mode; applications that use it should verify their tree endpoints, loading modes, selection, and saved views after migrating.
 
 ## 1. Replace the npm Dependency
 
@@ -21,7 +21,7 @@ Run these commands from your Angular application's package directory:
 
 ```powershell
 npm uninstall @eternalcodestudio/primeng-table
-npm install @competer/primeng-table@19.1.9
+npm install @competer/primeng-table@19.2.0
 ```
 
 Include the resulting dependency and lockfile changes in your migration. Update any internal libraries that still depend on the original package as well.
@@ -47,6 +47,8 @@ The exported symbol names stay the same. Apply this change to components, HTTP a
 If your application imports from `ecs-primeng-table`, check how that name is resolved. The repository demo uses it as a TypeScript alias for the locally built library; it is not the published ComPeter package name. When switching to the npm package, replace those imports with `@competer/primeng-table` too.
 
 Inspect `compilerOptions.paths` in your TypeScript configuration. Remove or update mappings that would still resolve the library to an old source checkout or build under `dist`. Do not redirect `@competer/primeng-table` to an outdated local copy.
+
+If tests or development scripts load the compiled FESM bundle directly, its filename has changed from `eternalcodestudio-primeng-table.mjs` to `competer-primeng-table.mjs` under `dist/ecs-primeng-table/fesm2022`. Update those paths and rebuild before testing. Application imports should use the public package name, not a hard-coded bundle path.
 
 ## 3. Keep Providers and Adapters on the Same Package
 
@@ -92,7 +94,7 @@ The table reads configuration from `response.body`. Do not add a transformation 
 In each project that directly references the original package, replace its `PackageReference` with:
 
 ```xml
-<PackageReference Include="ComPeter.PrimeNGTable" Version="8.1.4" />
+<PackageReference Include="ComPeter.PrimeNGTable" Version="8.2.0" />
 ```
 
 Remove the old `ECS.PrimeNGTable` reference. If your solution uses central package management, update the corresponding `PackageVersion` entry and project references instead of adding a version directly to each project.

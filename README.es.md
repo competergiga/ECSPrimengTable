@@ -1,14 +1,16 @@
 > Versión en español. [Read in English](README.md).
 
-[![NuGet Version](https://img.shields.io/nuget/v/ECS.PrimeNGTable.svg)](https://www.nuget.org/packages/ECS.PrimeNGTable/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/ECS.PrimeNGTable.svg)](https://www.nuget.org/packages/ECS.PrimeNGTable/)
+[![NuGet Version](https://img.shields.io/nuget/v/ComPeter.PrimeNGTable.svg)](https://www.nuget.org/packages/ComPeter.PrimeNGTable/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ComPeter.PrimeNGTable.svg)](https://www.nuget.org/packages/ComPeter.PrimeNGTable/)
 
-[![npm version](https://img.shields.io/npm/v/@eternalcodestudio/primeng-table.svg)](https://www.npmjs.com/package/@eternalcodestudio/primeng-table)
-[![npm downloads](https://img.shields.io/npm/dm/@eternalcodestudio/primeng-table.svg)](https://www.npmjs.com/package/@eternalcodestudio/primeng-table)
+[![npm version](https://img.shields.io/npm/v/@competer/primeng-table.svg)](https://www.npmjs.com/package/@competer/primeng-table)
+[![npm downloads](https://img.shields.io/npm/dm/@competer/primeng-table.svg)](https://www.npmjs.com/package/@competer/primeng-table)
 <a id="ecs-primeng-table"></a>
 # ECS PrimeNG Table
 
-Una solución creada por Alex Ibrahim Ojea que mejora la tabla PrimeNG con filtros avanzados y funcionalidad ampliada, delegando toda lógica de consulta y filtrado al motor de base de datos. El frontend está construido con componentes Angular 21 y PrimeNG 21, mientras que el backend es una API .NET 10 (ASP.NET) conectada a Microsoft SQL Server, fácilmente adaptable a otras bases de datos. Este enfoque evita la sobrecarga de servidor y frontend manipulando el filtrado y paging dinámicamente en la base de datos, e incluye características tales como visibilidad de la columna, filtros de columna, vistas personalizadas y más.
+Una solución creada por Alex Ibrahim Ojea que mejora la tabla PrimeNG con filtros avanzados y funcionalidad ampliada, delegando toda lógica de consulta y filtrado al motor de base de datos. El frontend está construido con componentes Angular 19 y PrimeNG 19, mientras que el backend es una API .NET 8 (ASP.NET) conectada a Microsoft SQL Server, fácilmente adaptable a otras bases de datos. Este enfoque evita la sobrecarga de servidor y frontend manipulando el filtrado y paging dinámicamente en la base de datos, e incluye características tales como visibilidad de la columna, filtros de columna, vistas personalizadas y más.
+
+Este fork mantenido por la comunidad se publica como `@competer/primeng-table` en npm y `ComPeter.PrimeNGTable` en NuGet. Los usuarios existentes pueden seguir la [guía de migración a ComPeter](MIGRATING-TO-COMPETER.es.md).
 
 <br><br><br>
 
@@ -62,7 +64,7 @@ Seguir estos pasos proporciona una manera más conveniente de navegar y revisar 
 ## 1 Software necesario
 Para ejecutar este proyecto, necesitará:
 - [Visual Studio Code](https://code.visualstudio.com/Download) – para el desarrollo de frontend.
-- [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/) – para el desarrollo de API de backend con ASP.NET Core. Asegúrese de instalar la carga de trabajo **ASP.NET** y **.NET 10 framework**.
+- [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/) – para el desarrollo de API de backend con ASP.NET Core. Asegúrese de instalar la carga de trabajo **ASP.NET** y el **SDK de .NET 8**.
 - [Node.js](https://nodejs.org/en/download/package-manager) – para ejecutar la aplicación Angular. Se recomienda gestionar versiones de Nodo con [NVM](https://github.com/nvm-sh/nvm).
 - [Microsoft SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) – el motor de bases de datos utilizado para consultas. Opcional, se puede reemplazar con otros motores con ajustes de código menores.
 - (Opcional) [DBeaver](https://dbeaver.io/download/) – Un GUI para la gestión de bases de datos que funciona con múltiples motores. Puedes usar otras herramientas, pero esta es la que normalmente uso.
@@ -109,7 +111,7 @@ La siguiente imagen muestra el diagrama ER de todas las tablas:
 
 <a id="221-open-the-project"></a>
 #### 2.2.1 Abrir el proyecto
-Utilizando **Visual Studio 2026**, abre la solución backend ubicada en [este camino](Backend). Asegúrese de que la carga de trabajo **ASP.NET** y **.NET 10 framework** están instalados. Si falta algún componente, utilice el **Visual Studio Installer** para añadirlo.
+Utilizando **Visual Studio 2026**, abre la solución backend ubicada en [este camino](Backend). Asegúrese de que la carga de trabajo **ASP.NET** y el **SDK de .NET 8** están instalados. Si falta algún componente, utilice el **Visual Studio Installer** para añadirlo.
 
 <br><br>
 
@@ -323,21 +325,23 @@ Esta sección proporciona una guía paso a paso sobre cómo integrar el **ECS Pr
 <a id="31-backend-requirements"></a>
 ### 3.1 Requisitos del backend
 > [!NOTE]  
-> El paquete **ECS PrimeNG Table** está construido para .NET 10, pero también debe funcionar perfectamente con nuevas versiones .NET.
+> El paquete **ComPeter.PrimeNGTable** tiene .NET 8 como destino. Utiliza un proyecto compatible con ese framework de destino.
 
-Si ya está trabajando en un proyecto **.NET 10 (o superior)**, necesitará instalar el paquete compilado backend de NuGet (descargar la versión más reciente es recomendable).  
-[ECS.PrimeNGTable on NuGet](https://www.nuget.org/packages/ECS.PrimeNGTable)
+Si ya está trabajando en un proyecto **.NET 8 (o superior)**, instale el paquete de backend desde NuGet:
+[ComPeter.PrimeNGTable en NuGet](https://www.nuget.org/packages/ComPeter.PrimeNGTable)
 
-Además, asegúrese de que se instalen las siguientes dependencias necesarias:
-- **ClosedXML** (conferencia= 0.105.0)
-- **LinqKit** (conferencia= 1.3.0)
-- **Microsoft.EntityFrameworkCore** (seguro= 10.0.0)
-- **System.Linq.Dynamic.Core** (seguro= 1.7.0)
+El paquete declara las siguientes dependencias, que NuGet restaura de forma transitiva. Compruebe su compatibilidad con las versiones que ya utiliza su aplicación:
+- **ClosedXML** (>= 0.104.0)
+- **LinqKit** (>= 1.3.0)
+- **Microsoft.EntityFrameworkCore** (>= 8.0.0)
+- **Microsoft.Extensions.Caching.Memory** (>= 8.0.1)
+- **System.IO.Packaging** (>= 8.0.1)
+- **System.Linq.Dynamic.Core** (>= 1.6.0)
 
 > [!TIP]
 > Siempre puedes consultar las últimas versiones de dependencia visitando:  
-`https://www.nuget.org/packages/ECS.PrimeNGTable/<version>#dependencies-body-tab`  
-(Reemplazar `<version>` con la versión específica del paquete que está descargando, por ejemplo, `8.0.1`).
+`https://www.nuget.org/packages/ComPeter.PrimeNGTable/<version>#dependencies-body-tab`
+(Reemplazar `<version>` con la versión específica del paquete que está descargando, por ejemplo, `8.2.0`).
 
 Con estas dependencias en su lugar y el paquete instalado, su backend está listo para usar el **ECS PrimeNG Table**.
 
@@ -353,25 +357,27 @@ Con estas dependencias en su lugar y el paquete instalado, su backend está list
 <a id="321-installing-the-package-and-peer-dependencies"></a>
 #### 3.2.1 Instalación del paquete y sus dependencias pares
 > [!NOTE]  
-> El paquete **ECS PrimeNG Table** está construido para Angular 21 con componentes PrimeNG 21. Aunque puede funcionar con versiones más nuevas, la compatibilidad no está garantizada, ya que PrimeNG introduce con frecuencia cambios de ruptura en sus componentes.
+> El paquete **@competer/primeng-table** de esta rama está construido con Angular 19 y PrimeNG 19. La compatibilidad con nuevas versiones principales no está garantizada, ya que PrimeNG introduce con frecuencia cambios incompatibles en sus componentes.
 
-Si ya está trabajando en un proyecto **Angular 21**, puede comprobar el paquete compilado de frontend en NPM aquí:  
-[@eternalcodestudio/primeng-table on NPM](https://www.npmjs.com/package/@eternalcodestudio/primeng-table)
+Si ya está trabajando en un proyecto **Angular 19**, puede consultar el paquete de frontend en npm aquí:
+[@competer/primeng-table en npm](https://www.npmjs.com/package/@competer/primeng-table)
 
 Para instalar el paquete, abra una terminal en la carpeta raíz de su proyecto y ejecute el siguiente comando (descargar la última versión es recomendable).
 
 ```sh
-npm install @eternalcodestudio/primeng-table
+npm install @competer/primeng-table
 ```
 
 Además, asegúrese de que las siguientes dependencias requeridas estén instaladas en su proyecto:
-- **@angular/common** (conferencia=21.0.0)
-- **@angular/core** (conferencia=21.0.0)
-- **primeng** (conferencia=21.0.0)
-- **primeicons** (conferencia=7.0.0)
+- **@angular/common** (>=19.0.0)
+- **@angular/core** (>=19.0.0)
+- **@angular/animations** (>=19.0.0)
+- **primeng** (>=19.0.0)
+- **primeicons** (>=7.0.0)
+- **@ngx-translate/core** (^17.0.0)
 
 > [!CAUTION]  
-> Estas son las dependencias **peer** y son **not instalados automáticamente**. Si su proyecto ya no los incluye, debe instalarlos por separado utilizando NPM.
+> Estas son dependencias **peer** que deben ser compatibles con su aplicación. npm puede instalar automáticamente las que falten; revise sus advertencias e instale versiones compatibles explícitamente cuando sea necesario.
 
 <br><br>
 
@@ -420,7 +426,7 @@ En este ejemplo, la implementación utiliza los principales servicios proporcion
 import { Injectable } from '@angular/core';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ECSPrimengTableHttpService } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTableHttpService } from '@competer/primeng-table';
 import { SharedService } from './shared.service';
 
 @Injectable({ providedIn: 'root' })
@@ -458,7 +464,7 @@ Del mismo modo, usted necesita crear una clase que extiende `ECSPrimengTableNoti
 En este ejemplo, la aplicación se basa en los principales servicios prestados por `SharedService`.
 ```ts
 import { Injectable } from '@angular/core';
-import { ECSPrimengTableNotificationService } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTableNotificationService } from '@competer/primeng-table';
 import { SharedService } from './shared.service';
 
 @Injectable({ providedIn: 'root' })
@@ -485,7 +491,7 @@ export class NotificationService extends ECSPrimengTableNotificationService {
 ###### Registro de los servicios
 Por último, registre sus implementaciones en su sistema de inyección de dependencia (por ejemplo, en `app.config.ts`):
 ```ts
-import { ECSPrimengTableHttpService, ECSPrimengTableNotificationService } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTableHttpService, ECSPrimengTableNotificationService } from '@competer/primeng-table';
 export const appConfig: ApplicationConfig = {
   providers: [
     ...
@@ -1624,7 +1630,7 @@ Proporciona `ECSPrimengTableStateService` en un **componente** padre que permane
 ```ts
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ECSPrimengTableStateService } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTableStateService } from '@competer/primeng-table';
 
 @Component({
   selector: 'app-people-scope',
@@ -2141,7 +2147,7 @@ Asumiendo que haya completado todos los pasos en la sección de configuración y
 En el archivo TipoScript de componente deseado, una definición mínima debe parecerse a esto (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -2180,7 +2186,7 @@ Un ejemplo de esta suscripción podría ser:
 En el archivo TipoScript del componente deseado:
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -2603,7 +2609,7 @@ Independientemente de la estrategia, los filtros predefinidos deben definirse pr
 Gestionar dos listas de filtros predefinidas en la misma tabla (asumiendo que el componente se llama `Home` y es un componente independiente):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions, IPredefinedFilter } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions, IPredefinedFilter } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3104,7 +3110,7 @@ Ambos emisores proporcionan un objeto con la siguiente estructura:
 Para habilitar el selector de filas únicas y suscribirse a cambios, en el archivo de componente deseado TipoScript, una definición mínima debe parecerse a esto (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3186,7 +3192,7 @@ En cualquier momento, puede acceder a la propiedad `selectedRowsCheckbox` del co
 Para habilitar el selector de filas de la casilla de verificación, suscríbete a los cambios de selección y accede a la propiedad `selectedRowsCheckbox` de la tabla, el archivo TypeScript puede tener una configuración mínima como esta (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3298,7 +3304,7 @@ Usted quiere aplicar:
 Su componente TipoScript archivo podría definirse de la siguiente manera (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3418,7 +3424,7 @@ Supongamos que desea tener botones de acción de cabecera y fila:
 Su componente TipoScript archivo podría definirse de la siguiente manera (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions, ITableButton } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions, ITableButton } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3576,7 +3582,7 @@ Si desea desactivar el filtro global por completo para que no aparezca en el fro
 Asumiendo que quieras limitar la longitud de tu filtro global a 15 caracteres, puedes hacerlo en el archivo TipoScript de tu componente (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3763,7 +3769,7 @@ Puede ajustar este comportamiento o desactivarlo completamente a través de la c
 Para configurar el contenido de celda **copy** para copiar después de mantener el ratón hacia abajo para los segundos 0.8, en el archivo TipoScript del componente deseado, una definición mínima debe parecerse a esto (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3809,7 +3815,7 @@ Para configurar la tabla de manera que su altura sea determinada por una fórmul
 A continuación se muestra un ejemplo mínimo asumiendo que el componente se llama `Home`:
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -3859,7 +3865,7 @@ Esto es particularmente útil si desea retrasar la carga de tablas hasta que se 
 Supongamos que desea evitar que su tabla busque su configuración y datos sobre la puesta en marcha de componentes. Su componente TipoScript archivo podría definirse de la siguiente manera (asumiendo que el componente se llama `Home`):
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -4021,7 +4027,7 @@ El comportamiento del informe de Excel se puede personalizar a través del objet
 Su componente TipoScript puede parecerse a esto: 
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -4094,7 +4100,7 @@ El menú **view sólo se mostrará** si:
 Un ejemplo de su componente TipoScript puede parecerse a esto, asumiendo que desea utilizar un modo de ahorro `TableViewSaveMode.LocalStorage`: 
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions, TableViewSaveMode } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions, TableViewSaveMode } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -4290,7 +4296,7 @@ Como mínimo, debe establecer las siguientes opciones:
 Un ejemplo de una configuración del componente TipoScript puede parecerse a esto:
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions, TableViewSaveMode } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions, TableViewSaveMode } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -4432,7 +4438,7 @@ Para configurar la tabla para mostrar una descripción que contiene texto HTML r
 A continuación se muestra un ejemplo mínimo asumiendo que el componente se llama `Home`:
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -4485,7 +4491,7 @@ Para configurar la tabla para mostrar una leyenda que contiene texto HTML rico, 
 A continuación se muestra un ejemplo mínimo asumiendo que el componente se llama `Home`:
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -4549,7 +4555,7 @@ Para configurar la tabla para ocultar la **`reset table view button`**, puede de
 A continuación se muestra un ejemplo mínimo asumiendo que el componente se llama `Home`:
 ```ts
 import { Component } from '@angular/core';
-import { ECSPrimengTable, ITableOptions, createTableOptions } from '@eternalcodestudio/primeng-table';
+import { ECSPrimengTable, ITableOptions, createTableOptions } from '@competer/primeng-table';
 
 @Component({
   selector: 'ecs-home',
@@ -5492,7 +5498,7 @@ public static async Task SaveViewsAsync<TEntity, TUsername>(
 ---
 <a id="8-frontend-component-reference"></a>
 ## 8 Referencia del componente frontend
-Esta sección describe las utilidades de frontend proporcionadas por la biblioteca Angular `@eternalcodestudio/primeng-table`.
+Esta sección describe las utilidades de frontend proporcionadas por la biblioteca Angular `@competer/primeng-table`.
 
 Incluye enums, interfaces, utilidades, servicios y componentes utilizados para configurar y renderizar la Tabla ECS PrimeNG en el frontend.
 
