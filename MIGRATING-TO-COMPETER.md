@@ -5,7 +5,7 @@
 >
 > The current adaptation uses Angular **14.2.12**, PrimeNG **14.2.3**, TypeScript **4.8.4**, ngx-translate core **14.0.0** and HTTP loader **7.0.0**. Its npm manifest declares **14.2.0**, not a published Angular 14 release. Build with `npm ci`, `npx ng build ecs-primeng-table` and `npm pack ./dist/ecs-primeng-table`, then install the generated local `.tgz` in the consuming application.
 >
-> The backend targets **net5.0**, using EF Core **5.0.17**, ClosedXML **0.102.3**, MemoryCache **6.0.3** and Packaging **6.0.1**. Compilation requires **SDK .NET 8+ / C# 12**; running the example requires the real **.NET 5 and ASP.NET Core 5 runtimes**. Package ID `ComPeter.PrimeNGTable` and version **8.2.0** are retained, but these changes are not published. Use a project reference or the locally built `.nupkg`, not a registry package assumed to contain this adaptation.
+> The backend targets **net5.0**, using EF Core **5.0.17**, ClosedXML **0.102.3**, MemoryCache **6.0.3** and Packaging **6.0.1**. Compilation requires **SDK .NET 8+ / C# 12**; running the example requires the real **.NET 5 and ASP.NET Core 5 runtimes**. Package ID `ComPeter.PrimeNGTable` is retained, and the version is **5.2.0**, whose major **5** identifies .NET 5. Version **8.2.0** belongs to the historical .NET 8 backend. These changes are not published. Use a project reference or the locally built `.nupkg`, not a registry package assumed to contain this adaptation.
 >
 > Follow [current integration instructions](README.md#3-integrating-into-a-project) for local builds, dependencies, PrimeNG 14 CSS and Angular 14 translation setup. Angular 14, Node 16 and .NET 5 are out of official support.
 
@@ -15,12 +15,12 @@ This guide covers migrating an existing application from the original ECS npm an
 
 ## Package Mapping and Version Scope
 
-| Platform | Original package | ComPeter package | Historical version in Angular19-publish |
-| --- | --- | --- | --- |
-| Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.2.0` |
-| .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.2.0` |
+| Platform | Original package | ComPeter package | Historical version in Angular19-publish | Current local version |
+| --- | --- | --- | --- | --- |
+| Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.2.0` | `14.2.0` (Angular 14) |
+| .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.2.0` (.NET 8) | `5.2.0` (.NET 5) |
 
-These were the versions declared for the historical rename, not a verification of the latest registry versions. The current [npm manifest](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) and [.NET project](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj) describe the local adaptation summarized above.
+The historical column shows the versions declared for the rename, not a verification of the latest registry versions. The local column reflects the current [npm manifest](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) and [.NET project](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj).
 
 The package rename does not rename the exported Angular classes, the component selector, or the C# namespaces. The configuration-generation method and its response models are unchanged between the compared branches.
 
@@ -102,17 +102,17 @@ The table reads configuration from `response.body`. Do not add a transformation 
 
 ## 5. Replace the NuGet Reference
 
-In each project that directly references the original package, replace its `PackageReference` with:
+For this local .NET 5 adaptation, replace the `PackageReference` in each project that directly references the original package with the following, using the locally built package:
 
 ```xml
-<PackageReference Include="ComPeter.PrimeNGTable" Version="8.2.0" />
+<PackageReference Include="ComPeter.PrimeNGTable" Version="5.2.0" />
 ```
 
 Remove the old `ECS.PrimeNGTable` reference. If your solution uses central package management, update the corresponding `PackageVersion` entry and project references instead of adding a version directly to each project.
 
 Check shared projects and internal packages for transitive references to the original package. The package ID changed, but the assembly name remains `ECS.PrimengTable`. Avoid retaining both packages in the consuming application's dependency graph, because they provide the same assembly identity/name rather than independent side-by-side implementations.
 
-The backend package still targets .NET 8. Its publication changes also add references to `Microsoft.Extensions.Caching.Memory` and `System.IO.Packaging`, with minimum versions of `8.0.1`. These normally restore transitively; review any dependency downgrade or version-conflict warnings in your solution.
+The local `5.2.0` package targets .NET 5 and uses the dependencies listed in the opening summary. The historical `Angular19-publish` branch uses package `8.2.0` for .NET 8; its publication changes add references to `Microsoft.Extensions.Caching.Memory` and `System.IO.Packaging`, with minimum versions of `8.0.1`. Do not confuse those historical dependencies with this adaptation's dependencies. Review any dependency downgrade or version-conflict warnings in your solution.
 
 ## 6. Do Not Rename the Existing API
 
