@@ -49,6 +49,23 @@ static class ProgressChecks {
         Check(sheet.Cell(3, 1).DataType == XLDataType.Number && sheet.Cell(3, 1).GetDouble() == 15.5,
             "Progress must export as a number, not a percentage string");
         Check(sheet.Cell(4, 1).GetDouble() == 125, "Export must preserve the original out-of-range value");
+        var oversizedRows = Enumerable.Repeat(new ProgressExample { Progress = 0m }, XLHelper.MaxRowNumber - 1).AsQueryable();
+        var oversizedExport = EcsPrimengTableService.GenerateExcelReport(new ExcelExportRequestModel {
+            Page = 0, PageSize = 10, Columns = ["Progress"], Filename = "Oversized", Filter = new()
+        }, oversizedRows);
+        Check(!oversizedExport.success && oversizedExport.reportFile == null,
+            "An oversized export must fail before generating worksheet rows");
+        Check(oversizedExport.statusMessage.Contains("1,048,574") && oversizedExport.statusMessage.Contains("Apply filters"),
+            "An oversized export must explain the worksheet limit and how to reduce the export");
+        var filteredExport = EcsPrimengTableService.GenerateExcelReport(new ExcelExportRequestModel {
+            Page = 0, PageSize = 10, Columns = ["Progress"], Filename = "Filtered", ApplyFilters = true,
+            Filter = new() { ["Progress"] = [new ColumnFilterModel { Value = 10, MatchMode = "gt", Operator = "and" }] }
+        }, oversizedRows.Concat(rows));
+        Check(filteredExport.success && filteredExport.reportFile != null,
+            "A large source must still export successfully when the applied filters fit the worksheet");
+        using var filteredWorkbook = new XLWorkbook(new MemoryStream(filteredExport.reportFile!));
+        Check(filteredWorkbook.Worksheet(1).LastRowUsed()!.RowNumber() == 4,
+            "The filtered export must contain only the two matching data rows");
         Console.WriteLine("Progress metadata, numeric filtering/sorting and Excel export checks passed.");
     }
 }

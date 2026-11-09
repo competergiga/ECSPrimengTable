@@ -12,11 +12,11 @@ public partial class primengTableReusableComponentContext : DbContext
     {
     }
 
-    public virtual DbSet<EmploymentStatusCategory> EmploymentStatusCategories { get; set; }
+    public virtual DbSet<EmploymentStatusCategory> EmploymentStatusCategories { get; set; } = null!;
 
-    public virtual DbSet<TableView> TableViews { get; set; }
+    public virtual DbSet<TableView> TableViews { get; set; } = null!;
 
-    public virtual DbSet<TestTable> TestTables { get; set; }
+    public virtual DbSet<TestTable> TestTables { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,11 +26,7 @@ public partial class primengTableReusableComponentContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("EmploymentStatusCategories_PK");
 
-            entity.ToTable(tb =>
-                {
-                    tb.HasComment("Contains a list of employment categories.");
-                    tb.HasTrigger("EmploymentStatusCategories_tg_dateUpdated");
-                });
+            entity.HasComment("Contains a list of employment categories.");
 
             entity.HasIndex(e => e.StatusName, "EmploymentStatusCategories_statusName_UNIQUE").IsUnique();
 
@@ -67,11 +63,7 @@ public partial class primengTableReusableComponentContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("TableSaveStates_PK");
 
-            entity.ToTable(tb =>
-                {
-                    tb.HasComment("Contains the table vies associated to different users.");
-                    tb.HasTrigger("TableViews_tg_dateUpdated");
-                });
+            entity.HasComment("Contains the table vies associated to different users.");
 
             entity.HasIndex(e => new { e.Username, e.TableKey, e.ViewAlias }, "TableSaveStates_data_UNIQUE").IsUnique();
 
@@ -110,11 +102,8 @@ public partial class primengTableReusableComponentContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("Test1Table_PK");
 
-            entity.ToTable("TestTable", tb =>
-                {
-                    tb.HasComment("The table used for the test.");
-                    tb.HasTrigger("Test1Table_tg_dateUpdated");
-                });
+            entity.ToTable("TestTable");
+            entity.HasComment("The table used for the test.");
 
             entity.HasIndex(e => e.Username, "Test1Table_username_UNIQUE").IsUnique();
 

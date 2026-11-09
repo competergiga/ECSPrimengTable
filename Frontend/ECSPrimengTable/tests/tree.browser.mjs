@@ -9,8 +9,8 @@ import { fullDemoFixture, queryFixture } from './full-demo.fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const { DataType, CellDisplay } = await import('../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs');
-const root = resolve('dist/ECSPrimengTable/browser');
+const { DataType, CellDisplay } = await import('../dist/ecs-primeng-table/fesm2020/competer-primeng-table.mjs');
+const root = resolve('dist/ECSPrimengTable');
 const screenshots = process.env.TREE_SCREENSHOT_DIR || join(tmpdir(), 'ecs-tree-screenshots');
 await mkdir(screenshots, { recursive: true });
 const server = createServer(async (request, result) => {
@@ -134,7 +134,9 @@ try {
     const previousTable = await page.locator('ecs-tree-demo ecs-primeng-table').elementHandle();
     const rootResponse = page.waitForResponse(response => response.url().includes('/TreeDemo/GetTableData') &&
       response.request().postDataJSON()?.roots === true);
-    await page.locator('#' + id).click(); await page.getByRole('option').filter({ hasText: label }).click();
+    const dropdown = page.locator('p-dropdown').filter({ has: page.locator('#' + id) });
+    await dropdown.locator('.p-dropdown-trigger').click();
+    await page.getByRole('option').filter({ hasText: label }).click();
     await page.waitForFunction(element => !element.isConnected, previousTable);
     await (await rootResponse).finished();
     await page.locator('ecs-tree-demo ecs-table-cell').first().waitFor();
@@ -181,13 +183,13 @@ try {
     await expand('Root 01'); await count(44);
     const lastChild = node('Wide child 24'); await lastChild.scrollIntoViewIfNeeded();
     const bounds = await lastChild.boundingBox(); assert.ok(bounds.width > 100 && bounds.height > 10, 'Child beyond ten must have a visible row');
-    await node('Root 01').locator('input[type=checkbox]').check();
+    await node('Root 01').locator('.p-checkbox-box').click();
     assert.equal(await rows.locator('input[type=checkbox]:checked').count(), 1, 'Parent checkbox must not select descendants');
-    await node('Root 01').locator('input[type=checkbox]').uncheck();
+    await node('Root 01').locator('.p-checkbox-box').click();
     await node('Root 01').getByRole('button', { name: 'Edit record', exact: true }).click();
     await page.waitForURL('**/tree/1/edit');
     await page.getByRole('link', { name: 'Back to tree', exact: true }).click(); await count(44);
-    assert.equal(await page.locator('#tree-mode').innerText(), label, 'Mode must survive detail navigation');
+    assert.equal(await page.locator('p-dropdown').filter({ has: page.locator('#tree-mode') }).locator('.p-dropdown-label').innerText(), label, 'Mode must survive detail navigation');
     await collapse('Root 01'); await count(10);
     const search = page.getByPlaceholder('Search keyword', { exact: true });
     const beforeSearch = requests.length;
@@ -227,8 +229,9 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Table actions', exact: true }).waitFor();
   assert.ok(await page.getByRole('button', { name: 'Row actions', exact: true }).count() > 0);
-  const controls = await page.locator('ecs-tree-demo > section > div p-select').evaluateAll(elements => elements.map(element => {
+  const controls = await page.locator('ecs-tree-demo > section > div p-dropdown').evaluateAll(elements => elements.map(element => {
     const bounds = element.getBoundingClientRect(); return { left: bounds.left, right: bounds.right, width: bounds.width }; }));
+  assert.equal(controls.length, 2, 'Mode/storage controls must both be rendered');
   assert.ok(controls.every(bounds => bounds.left >= 0 && bounds.right <= 391 && bounds.width > 0), 'Mode/storage controls must fit mobile');
   await page.screenshot({ path: join(screenshots, 'tree-mobile.png'), fullPage: true });
   const mobileSearch = page.getByPlaceholder('Search keyword', { exact: true });

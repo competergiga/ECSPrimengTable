@@ -8,9 +8,11 @@
 <a id="ecs-primeng-table"></a>
 # ECS PrimeNG Table
 
-Una solución creada por Alex Ibrahim Ojea que mejora la tabla PrimeNG con filtros avanzados y funcionalidad ampliada, delegando toda lógica de consulta y filtrado al motor de base de datos. El frontend está construido con componentes Angular 19 y PrimeNG 19, mientras que el backend es una API .NET 8 (ASP.NET) conectada a Microsoft SQL Server, fácilmente adaptable a otras bases de datos. Este enfoque evita la sobrecarga de servidor y frontend manipulando el filtrado y paging dinámicamente en la base de datos, e incluye características tales como visibilidad de la columna, filtros de columna, vistas personalizadas y más.
+Una solución creada por Alex Ibrahim Ojea que mejora la tabla PrimeNG con filtros avanzados y funcionalidad ampliada, delegando toda lógica de consulta y filtrado al motor de base de datos. Esta adaptación utiliza Angular 14.2 y PrimeNG 14.2 en el frontend, y .NET 5 (ASP.NET Core) con EF Core 5.0.17 en el backend, conectado a Microsoft SQL Server y adaptable a otras bases de datos.
 
-Este fork mantenido por la comunidad se publica como `@competer/primeng-table` en npm y `ComPeter.PrimeNGTable` en NuGet. Los usuarios existentes pueden seguir la [guía de migración a ComPeter](MIGRATING-TO-COMPETER.es.md).
+> Angular 14, Node 16 y .NET 5 están fuera de soporte oficial. Para compilar el backend se necesita SDK .NET 8 o posterior por la sintaxis C# existente; para ejecutarlo se necesitan los runtimes .NET 5 y ASP.NET Core 5. Consulta las [limitaciones y comprobaciones del backend](Backend/ECS.PrimengTable/README.es.md). Los paquetes publicados en npm/NuGet no se actualizan con estos cambios locales.
+
+Este fork mantenido por la comunidad utiliza los nombres de paquete `@competer/primeng-table` y `ComPeter.PrimeNGTable`. Las insignias y enlaces a los registros corresponden a versiones publicadas, no a esta adaptación local Angular 14/.NET 5. Utiliza las compilaciones locales de la sección 3; la [guía de migración a ComPeter](MIGRATING-TO-COMPETER.es.md) conserva el cambio de nombre histórico para Angular 19.
 
 <br><br><br>
 
@@ -65,7 +67,7 @@ Seguir estos pasos proporciona una manera más conveniente de navegar y revisar 
 Para ejecutar este proyecto, necesitará:
 - [Visual Studio Code](https://code.visualstudio.com/Download) – para el desarrollo de frontend.
 - [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/) – para el desarrollo de API de backend con ASP.NET Core. Asegúrese de instalar la carga de trabajo **ASP.NET** y el **SDK de .NET 8**.
-- [Node.js](https://nodejs.org/en/download/package-manager) – para ejecutar la aplicación Angular. Se recomienda gestionar versiones de Nodo con [NVM](https://github.com/nvm-sh/nvm).
+- [Node.js 16.20.2](https://nodejs.org/en/download/package-manager) – versión compatible con Angular CLI 14. La compilación utiliza TypeScript 4.8.4. Se recomienda gestionar versiones con NVM.
 - [Microsoft SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) – el motor de bases de datos utilizado para consultas. Opcional, se puede reemplazar con otros motores con ajustes de código menores.
 - (Opcional) [DBeaver](https://dbeaver.io/download/) – Un GUI para la gestión de bases de datos que funciona con múltiples motores. Puedes usar otras herramientas, pero esta es la que normalmente uso.
 
@@ -105,7 +107,7 @@ La siguiente imagen muestra el diagrama ER de todas las tablas:
 <a id="22-backend-api-in-aspnet"></a>
 ### 2.2 Backend (API en ASP.NET)
 > [!NOTE]  
-> Puede utilizar otras versiones .NET con los paquetes correspondientes. La solución debe seguir funcionando sin problemas.
+> El destino es `net5.0`. Instala los runtimes .NET 5 y ASP.NET Core 5 para la ejecución normal; el SDK de compilación es .NET 8 o posterior.
 
 
 
@@ -270,7 +272,7 @@ en el directorio temporal. API, SQL y Excel reales tienen validaciones separadas
 <a id="23-frontend-angular-project-using-primeng-components"></a>
 ### 2.3 Frontend (proyecto Angular con componentes PrimeNG)
 > [!NOTE]  
-> Puede utilizar otras versiones Angular y PrimeNG actualizando las dependencias `package.json` correspondientes. La solución todavía debe funcionar, pero tenga en cuenta que PrimeNG podría introducir cambios de estilo de ruptura que pueden afectar la apariencia o el comportamiento del componente.
+> Esta adaptación utiliza Angular 14.2.12, PrimeNG 14.2.3 y TypeScript 4.8.4. Cambiar las versiones de los frameworks requiere comprobaciones de compatibilidad independientes; actualizar dependencias no garantiza soporte.
 
 Esta sección supone que ha completado los pasos anteriores para configurar la base de datos y API.
 Antes de proceder, asegúrese de que **Node.js** esté instalado (a través del instalador `.msi` o `.exe`, o utilizando **NVM**), ya que se necesita para ejecutar la aplicación de frontend localmente.
@@ -288,21 +290,21 @@ Asegúrese de que el puerto coincida con su API. Si difiere, actualice el valor 
 
 Desde **Visual Studio Code**, abre un nuevo terminal (asegúrese de que está utilizando **CMD** y no PowerShell u otro shell) y navega al [carpeta raíz del proyecto de frontend](Frontend/ECSPrimengTable) utilizando el comando `cd`. Una vez en la carpeta correcta, ejecute el siguiente comando:
 ```sh
-npm install
+npm ci
 ```
 > [!TIP]  
-> Puede agregar la bandera `--verbose` al final (`npm install --verbose`) para obtener una salida más detallada durante el proceso de instalación.
+> Puede agregar `--verbose` (`npm ci --verbose`) para obtener más detalles de instalación. `npm ci` utiliza el archivo de bloqueo del repositorio.
 
 Este comando descargará todas las dependencias necesarias para el proyecto frontend. Una vez que haya terminado de ejecutar y si todo salió bien, asegúrese de que su API está funcionando correctamente, ejecute el siguiente comando en el terminal:
 ```sh
-ng build ecs-primeng-table
+npx ng build ecs-primeng-table
 ```
 Este comando utilizará **ng-packagr** para construir un paquete local en la carpeta `dist`, basado en el contenido de `projects\ecs-primeng-table` (el componente de tabla reutilizable).  
 
 Una vez que el paquete ha sido construido con éxito, puede iniciar la aplicación web ejecutando el siguiente comando en la terminal:
 
 ```sh
-ng serve -o
+npx ng serve -o
 ```
 > [!TIP]  
 > `ng serve` sin la bandera `-o` también funciona, pero no abrirá una pestaña del navegador automáticamente. Usted tendrá que navegar manualmente a la URL donde se sirve la página web.
@@ -325,23 +327,31 @@ Esta sección proporciona una guía paso a paso sobre cómo integrar el **ECS Pr
 <a id="31-backend-requirements"></a>
 ### 3.1 Requisitos del backend
 > [!NOTE]  
-> El paquete **ComPeter.PrimeNGTable** tiene .NET 8 como destino. Utiliza un proyecto compatible con ese framework de destino.
+> Este backend local tiene como destino **net5.0** y utiliza **C# 12**. Compila con **SDK .NET 8 o posterior**, pero ejecuta la API de ejemplo con los runtimes reales **.NET 5 y ASP.NET Core 5**. Un SDK posterior no sustituye esos runtimes.
 
-Si ya está trabajando en un proyecto **.NET 8 (o superior)**, instale el paquete de backend desde NuGet:
-[ComPeter.PrimeNGTable en NuGet](https://www.nuget.org/packages/ComPeter.PrimeNGTable)
+El proyecto conserva el identificador `ComPeter.PrimeNGTable` y la versión `8.2.0`; estos cambios locales no se han publicado en NuGet. No presupongas que el paquete del registro contiene esta adaptación. Es preferible una referencia al proyecto: desde el directorio de tu proyecto backend consumidor, ajusta la ruta y ejecuta:
 
-El paquete declara las siguientes dependencias, que NuGet restaura de forma transitiva. Compruebe su compatibilidad con las versiones que ya utiliza su aplicación:
-- **ClosedXML** (>= 0.104.0)
+```powershell
+dotnet add reference C:/Proyectos/eternalTabla14/Backend/ECS.PrimengTable/ECS.PrimengTable.csproj
+```
+
+Como alternativa, desde la raíz de este repositorio, compila el paquete local:
+
+```powershell
+dotnet build Backend/ECS.PrimengTable/ECS.PrimengTable.csproj -c Release
+```
+
+`GeneratePackageOnBuild` genera `Backend/ECS.PrimengTable/bin/Release/ComPeter.PrimeNGTable.8.2.0.nupkg`. Utiliza ese directorio como origen NuGet local y referencia `ComPeter.PrimeNGTable` versión `8.2.0` en el proyecto consumidor. Asegúrate de que la restauración selecciona este artefacto local, no uno del registro o de la caché con el mismo identificador y versión. Elimina cualquier referencia al paquete al utilizar una referencia al proyecto y evita conservar también el paquete original `ECS.PrimeNGTable`.
+
+El [archivo de proyecto](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj) declara estas dependencias. NuGet las restaura de forma transitiva; comprueba la compatibilidad con las de tu aplicación:
+- **ClosedXML** (0.102.3)
 - **LinqKit** (>= 1.3.0)
-- **Microsoft.EntityFrameworkCore** (>= 8.0.0)
-- **Microsoft.Extensions.Caching.Memory** (>= 8.0.1)
-- **System.IO.Packaging** (>= 8.0.1)
+- **Microsoft.EntityFrameworkCore** (>= 5.0.17 y < 6.0.0; esta adaptación utiliza 5.0.17)
+- **Microsoft.Extensions.Caching.Memory** (6.0.3)
+- **System.IO.Packaging** (6.0.1)
 - **System.Linq.Dynamic.Core** (>= 1.6.0)
 
-> [!TIP]
-> Siempre puedes consultar las últimas versiones de dependencia visitando:  
-`https://www.nuget.org/packages/ComPeter.PrimeNGTable/<version>#dependencies-body-tab`
-(Reemplazar `<version>` con la versión específica del paquete que está descargando, por ejemplo, `8.2.0`).
+Consulta las [limitaciones de validación del backend](Backend/ECS.PrimengTable/README.es.md) antes del despliegue. Las [versiones publicadas en NuGet](https://www.nuget.org/packages/ComPeter.PrimeNGTable) pueden tener otros destinos y dependencias.
 
 Con estas dependencias en su lugar y el paquete instalado, su backend está listo para usar el **ECS PrimeNG Table**.
 
@@ -357,27 +367,50 @@ Con estas dependencias en su lugar y el paquete instalado, su backend está list
 <a id="321-installing-the-package-and-peer-dependencies"></a>
 #### 3.2.1 Instalación del paquete y sus dependencias pares
 > [!NOTE]  
-> El paquete **@competer/primeng-table** de esta rama está construido con Angular 19 y PrimeNG 19. La compatibilidad con nuevas versiones principales no está garantizada, ya que PrimeNG introduce con frecuencia cambios incompatibles en sus componentes.
+> Esta biblioteca local utiliza **Angular 14.2.12**, **PrimeNG 14.2.3** y **TypeScript 4.8.4**. Su manifiesto declara la versión **14.2.0**, pero esta adaptación no se ha publicado en npm. Instalar la última versión del registro no es una instrucción de instalación para Angular 14.
 
-Si ya está trabajando en un proyecto **Angular 19**, puede consultar el paquete de frontend en npm aquí:
-[@competer/primeng-table en npm](https://www.npmjs.com/package/@competer/primeng-table)
-
-Para instalar el paquete, abra una terminal en la carpeta raíz de su proyecto y ejecute el siguiente comando (descargar la última versión es recomendable).
+Con Node 16.20.2, compila y empaqueta desde `Frontend/ECSPrimengTable`:
 
 ```sh
-npm install @competer/primeng-table
+npm ci
+npx ng build ecs-primeng-table
+npm pack ./dist/ecs-primeng-table
 ```
 
-Además, asegúrese de que las siguientes dependencias requeridas estén instaladas en su proyecto:
-- **@angular/common** (>=19.0.0)
-- **@angular/core** (>=19.0.0)
-- **@angular/animations** (>=19.0.0)
-- **primeng** (>=19.0.0)
-- **primeicons** (>=7.0.0)
-- **@ngx-translate/core** (^17.0.0)
+Después instala el tarball generado desde el directorio de la aplicación consumidora, ajustando la ruta:
+
+```sh
+npm install C:/Proyectos/eternalTabla14/Frontend/ECSPrimengTable/competer-primeng-table-14.2.0.tgz
+```
+
+Conserva los cambios de dependencias y del archivo de bloqueo. Los imports utilizan `@competer/primeng-table`, incluso al instalar desde un tarball local. Tras modificar la biblioteca, vuelve a compilar, empaquetar e instalar.
+
+Utiliza estas versiones en la aplicación consumidora:
+- **Angular common, core, animations y forms**: 14.2.12 (peers de la biblioteca: >=14.2.0 y <15.0.0); alinea los demás paquetes del framework Angular.
+- **primeng**: 14.2.3 (peer: >=14.2.0 y <15.0.0)
+- **primeicons**: 6.0.1 (peer: ^6.0.1)
+- **@ngx-translate/core**: 14.0.0 (peer: ^14.0.0)
+- **rxjs**: 7.8.2 en la demo (peer: ^6.5.3 o ^7.4.0)
+- **typescript**: 4.8.4 para compilar
+- **@ngx-translate/http-loader**: 7.0.0 para el ejemplo de carga JSON siguiente (dependencia de la aplicación, no un peer de la biblioteca)
 
 > [!CAUTION]  
 > Estas son dependencias **peer** que deben ser compatibles con su aplicación. npm puede instalar automáticamente las que falten; revise sus advertencias e instale versiones compatibles explícitamente cuando sea necesario.
+
+**Estilos y animaciones de PrimeNG 14**
+
+Incluye estas entradas en el array `styles` de compilación de `angular.json` de la aplicación consumidora, antes de tus estilos:
+
+```json
+"styles": [
+  "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+  "node_modules/primeng/resources/primeng.min.css",
+  "node_modules/primeicons/primeicons.css",
+  "src/styles.css"
+]
+```
+
+Utiliza la ruta real de tu hoja de estilos. PrimeNG 14 utiliza CSS de tema, no un proveedor de tema. En una aplicación standalone registra `BrowserAnimationsModule` de `@angular/platform-browser/animations` mediante `importProvidersFrom` al arrancar; en una aplicación NgModule impórtalo en el módulo raíz.
 
 <br><br>
 
@@ -492,7 +525,7 @@ export class NotificationService extends ECSPrimengTableNotificationService {
 Por último, registre sus implementaciones en su sistema de inyección de dependencia (por ejemplo, en `app.config.ts`):
 ```ts
 import { ECSPrimengTableHttpService, ECSPrimengTableNotificationService } from '@competer/primeng-table';
-export const appConfig: ApplicationConfig = {
+export const appConfig = {
   providers: [
     ...
     { provide: ECSPrimengTableNotificationService, useClass: NotificationService },
@@ -508,7 +541,8 @@ Esto indica el paquete **ECS PrimeNG table** para utilizar sus servicios persona
 
 
 <a id="324-multilanguage-column-headers-angular-19"></a>
-#### 3.2.4 Encabezados de columna multilingües (Angular 19)
+<a id="324-multilanguage-column-headers-angular-14"></a>
+#### 3.2.4 Encabezados de columna multilingües (Angular 14)
 
 Este fork permite traducir los encabezados de columna mediante **ngx-translate**. La aplicación que utiliza el componente gestiona la configuración del idioma y los diccionarios JSON. El componente renderiza el `header` de cada columna de backend usando `header | translate`.
 
@@ -516,10 +550,10 @@ La traducción se aplica a los nombres de columna en la cuadrícula y en el sele
 
 **Instalar las dependencias**
 
-Para esta rama Angular 19, instalar ngx-translate v17 en la aplicación que consume:
+Para esta adaptación Angular 14, instala ngx-translate core 14 y HTTP loader 7 en la aplicación consumidora:
 
 ```sh
-npm install @ngx-translate/core@^17 @ngx-translate/http-loader@^17
+npm install @ngx-translate/core@14.0.0 @ngx-translate/http-loader@7.0.0
 ```
 
 La biblioteca requiere `@ngx-translate/core`. La aplicación utiliza `@ngx-translate/http-loader` para cargar archivos JSON. Si su aplicación ya configura ngx-translate, reutiliza sus proveedores y diccionarios existentes.
@@ -556,36 +590,38 @@ Asegúrese de que los diccionarios se copian en la compilación de la aplicació
 
 **Configure la aplicación que consume**
 
-Agregue el proveedor de traducción a sus proveedores `app.config.ts` existentes, preservando su router, PrimeNG y otros proveedores de aplicaciones:
+Para una aplicación standalone, define un objeto de proveedores en `app.config.ts` y pásalo a `bootstrapApplication(AppComponent, appConfig)` en `main.ts`. Conserva el router, las animaciones y los demás proveedores:
 
 ```ts
-import { ApplicationConfig } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
-import { provideTranslateService } from '@ngx-translate/core';
-import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { importProvidersFrom } from '@angular/core';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-export const appConfig: ApplicationConfig = {
+export function translateLoader(http: HttpClient): TranslateHttpLoader {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export const appConfig = {
   providers: [
-    provideHttpClient(),
-    provideTranslateService({
-      lang: 'es',
-      fallbackLang: 'en',
-      loader: provideTranslateHttpLoader({
-        prefix: './assets/i18n/',
-        suffix: '.json'
+    importProvidersFrom(
+      HttpClientModule,
+      TranslateModule.forRoot({
+        defaultLanguage: 'en',
+        loader: { provide: TranslateLoader, useFactory: translateLoader, deps: [HttpClient] }
       })
-    })
+    )
   ]
 };
 ```
 
-Si `provideHttpClient()` ya está configurado con interceptores u otras opciones, mantenga esa configuración existente en lugar de agregarla de nuevo. El componente de tabla utiliza el servicio de traducción de la aplicación; no configura un cargador separado.
+Configura `HttpClientModule` y `TranslateModule.forRoot` una sola vez; conserva los interceptores y reutiliza una configuración de traducción existente. En una aplicación NgModule, incluye esos módulos en los `imports` del módulo raíz. Importa `TranslateModule` en los componentes standalone que utilicen el pipe `translate`, no `TranslatePipe` o `TranslateDirective` directamente. La tabla utiliza el servicio de traducción de la aplicación, no un cargador separado.
 
 Vea el [app.config.ts](Frontend/ECSPrimengTable/src/app/app.config.ts) de la demo para la configuración completa.
 
 **Cambiar el idioma**
 
-Establecer `lang` a `'en'`, `'es'`, `'fr'` o `'it'` para elegir el idioma de inicio. Para cambiar mientras la aplicación se está ejecutando, inyecte `TranslateService` en su componente y llame a `use()`:
+Llama a `translate.use('es')` al arrancar, por ejemplo en el constructor del componente raíz. `defaultLanguage` establece el idioma de respaldo; no selecciona el idioma activo. Utiliza `'en'`, `'es'`, `'fr'` o `'it'` al cambiar:
 
 ```ts
 import { inject } from '@angular/core';
@@ -593,6 +629,10 @@ import { TranslateService } from '@ngx-translate/core';
 
 // Inside your application component class:
 private readonly translate = inject(TranslateService);
+
+constructor() {
+  this.translate.use('es');
+}
 
 changeLanguage(language: 'en' | 'es' | 'fr' | 'it'): void {
   this.translate.use(language);
@@ -617,7 +657,7 @@ Para el backend .NET, esto se puede configurar con `[ColumnAttributes("columns.u
 
 **Idioma de respaldo y alcance de la traducción**
 
-Si falta una clave en el lenguaje activo, ngx-translate intenta `fallbackLang`. Con el controlador de traducción predeterminado, una clave que falta en ambos idiomas se muestra como-es. Todos los archivos de lenguaje configurados todavía deben existir y ser válidos JSON; fallback no es un reemplazo para fijar solicitudes HTTP fallidas.
+Si falta una clave en el idioma activo, ngx-translate 14 intenta `defaultLanguage` (`en` aquí). Con el controlador de traducción predeterminado, una clave que falta en ambos idiomas se muestra tal cual. Todos los archivos configurados deben existir y ser JSON válido; el respaldo no sustituye la corrección de peticiones HTTP fallidas.
 
 Se pueden traducir los encabezados y los textos de la interfaz del grid. Consulta la sección de traducción de interfaz al final de este documento. Los datos, identificadores de campos, valores de filtros y nombres de vistas se conservan.
 

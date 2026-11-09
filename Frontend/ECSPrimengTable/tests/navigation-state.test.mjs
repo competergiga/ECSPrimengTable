@@ -1,13 +1,13 @@
 import '@angular/compiler';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createEnvironmentInjector, runInInjectionContext } from '@angular/core';
+import { createEnvironmentInjector } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { of, Subject, throwError } from 'rxjs';
 import {
   ECSPrimengTableI18nService, ECSPrimengTable, ECSPrimengTableStateService, createTableOptions, DataType,
   TableViewSaveMode
-} from '../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs';
+} from '../dist/ecs-primeng-table/fesm2020/competer-primeng-table.mjs';
 
 test('optional select-all spans pages, preserves outside selections and emits only changed IDs', async () => {
   const parent = scope(); const fixture = list(parent); fixture.start();
@@ -64,6 +64,33 @@ function scope() {
   return createEnvironmentInjector([ECSPrimengTableStateService]);
 }
 
+test('Excel selection modes apply the RowID filter without an active selector filter', () => {
+  const parent = scope(); const fixture = list(parent); fixture.start();
+  const component = fixture.component;
+  const exports = [];
+  component.tableOptions.excelReport = { url: '/export' };
+  component.tableService.fetchExcelReport = (_url, request) => {
+    exports.push(structuredClone(request));
+    return of(new HttpResponse({ body: new Blob() }));
+  };
+  component.tableService.downloadFile = () => {};
+  component.onRowChekboxChange({ checked: true }, 'one-selected-row');
+  const filters = { name: [{ value: 'Ana', matchMode: 'contains', operator: 'and' }] };
+  component.tableLazyLoadEventInformation.filters = structuredClone(filters);
+  const options = { allColumns: false, applyFilters: false, applySorts: false, filename: 'Selection.xlsx', useIconInBools: false };
+  for (const [selectedRows, matchMode, operator] of [[1, 'in', 'or'], [2, 'notIn', 'and']]) {
+    component.generateExcelReport({ ...options, selectedRows });
+    assert.equal(exports.at(-1).applyFilters, true);
+    assert.deepEqual(exports.at(-1).filter.rowID, [{ value: ['one-selected-row'], matchMode, operator }]);
+    assert.deepEqual(exports.at(-1).filter.name, filters.name);
+  }
+  component.generateExcelReport({ ...options, selectedRows: 0 });
+  assert.equal(exports.at(-1).applyFilters, false);
+  assert.equal(exports.at(-1).filter.rowID, undefined);
+  assert.deepEqual(component.tableLazyLoadEventInformation.filters, filters, 'Export must not mutate table filters');
+  fixture.destroy(); parent.destroy();
+});
+
 function list(parent, { enabled = true, key = 'people', views = false, failedViews = false, dataUrl = '/data' } = {}) {
   const injector = createEnvironmentInjector([ECSPrimengTableI18nService], parent);
   const configurations = new Subject();
@@ -82,7 +109,7 @@ function list(parent, { enabled = true, key = 'people', views = false, failedVie
     handleTableError: (...args) => notifications.push(args),
     sortViews: () => {}, updateViewsMenuItems: () => []
   };
-  const component = runInInjectionContext(injector, () =>
+  const component = injector.runInContext(() =>
     new ECSPrimengTable(service, { showToast: (...args) => notifications.push(args) }));
   component.tableOptions = createTableOptions({
     statePersistence: { enabled, key },

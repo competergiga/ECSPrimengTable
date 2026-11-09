@@ -1,25 +1,22 @@
 import { ECSPrimengTableI18nService } from '../../services/i18n.service';
 import { ECSTableTranslatePipe } from '../../pipes/ui-translate.pipe';
-import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, Input, OnInit, OnDestroy, DestroyRef, ChangeDetectorRef, inject, Output, ViewChild, ViewEncapsulation } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, Input, OnInit, OnDestroy, ChangeDetectorRef, inject, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
 
 // PrimeNG imports
-import { Table, TableLazyLoadEvent, TableModule, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { LazyLoadEvent } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PaginatorModule } from 'primeng/paginator';
 import { FilterMetadata, MenuItem } from 'primeng/api';
-import { ButtonGroupModule } from 'primeng/buttongroup';
-import { PopoverModule } from 'primeng/popover';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { Menu, MenuModule } from 'primeng/menu';
 
 import { ECSPrimengTableService } from './ecs-primeng-table.service';
@@ -32,23 +29,33 @@ import { TablePredefinedFilters } from '../table-predefined-filters/table-predef
 import { TableButton } from '../table-button/table-button';
 import { ColumnSelector } from "../column-selector/column-selector";
 import { ExportExcel } from '../export-excel/export-excel';
-import { finalize, firstValueFrom, Observable } from 'rxjs';
+import { finalize, firstValueFrom, Observable, Subject, takeUntil } from 'rxjs';
 import { ViewsManagement } from "../views-management/views-management";
 import { ITreeRequest, ITreeResponse, TreeRow, TreeTableState } from '../../utils/tree-table-state';
+
+type TableLazyLoadEvent = Omit<LazyLoadEvent, 'filters'> & {
+  filters?: Record<string, FilterMetadata | FilterMetadata[]>;
+};
+interface TablePageEvent { first: number; rows: number; }
+interface TableRowSelectEvent<T> { data: T; }
+interface TableRowUnSelectEvent<T> { data: T; }
+interface TableMenuItem extends MenuItem {
+  _literalLabel?: boolean;
+  _uiLabelKey?: string;
+  _uiParams?: Record<string, any>;
+}
 
 @Component({
   selector: 'ecs-primeng-table',
   imports: [
     ECSTableTranslatePipe,
-    TranslatePipe,
+    TranslateModule,
     CommonModule,
     FormsModule,
     TableModule,
     ButtonModule,
     TooltipModule,
     InputTextModule,
-    IconFieldModule,
-    InputIconModule,
     MultiSelectModule,
     CheckboxModule,
     PaginatorModule,
@@ -57,21 +64,20 @@ import { ITreeRequest, ITreeResponse, TreeRow, TreeTableState } from '../../util
     TableButton,
     ColumnSelector,
     ExportExcel,
-    ButtonGroupModule,
     ViewsManagement,
-    PopoverModule,
+    OverlayPanelModule,
     MenuModule
   ],
   standalone: true,
   templateUrl: './ecs-primeng-table.html',
-  styleUrl: './ecs-primeng-table.scss',
+  styleUrls: ['./ecs-primeng-table.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   private readonly i18n = inject(ECSPrimengTableI18nService);
   private readonly changeDetector = inject(ChangeDetectorRef, { optional: true });
   private readonly stateScope = inject(ECSPrimengTableStateService, { optional: true });
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly destroy$ = new Subject<void>();
   private initialStateApplied = false;
   private destroyed = false;
 
@@ -79,7 +85,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     private tableService: ECSPrimengTableService,
     private notification: ECSPrimengTableNotificationService
   ) {
-    this.i18n.changes.pipe(takeUntilDestroyed()).subscribe(() => {
+    this.i18n.changes.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.headerMenuItems = this.translateMenuItems(this.headerMenuItems);
       this.rowMenuItems = this.translateMenuItems(this.rowMenuItems);
       this.changeDetector?.markForCheck();
@@ -217,6 +223,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('paginatorContainer', { static: false }) paginatorContainer!: ElementRef;
   ngAfterViewInit() {
     this.calculateScrollHeight();
+    this.changeDetector?.detectChanges();
   }
 
   deviceType: DeviceType = DeviceType.Desktop;
@@ -312,6 +319,12 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     }));
   }
 
+  @HostListener('document:keydown.escape')
+  closeResponsiveMenus(): void {
+    this.responsiveHeaderMenu?.hide();
+    this.responsiveRowMenu?.hide();
+  }
+
   openRowMenu(event: Event, row: any): void {
     event.stopPropagation();
     this.responsiveHeaderMenu?.hide();
@@ -327,7 +340,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     if (wasOpen) this.responsiveRowMenu?.alignOverlay();
   }
 
-  private translateMenuItems(items: MenuItem[]): MenuItem[] {
+  private translateMenuItems(items: TableMenuItem[]): TableMenuItem[] {
     return items.map(item => {
       if (item['_literalLabel']) return item;
       const key = item['_uiLabelKey'] ?? item.label;
@@ -338,7 +351,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   openHeaderMenu(event: Event): void {
     this.responsiveRowMenu?.hide();
     const options = this.tableOptions;
-    const items: MenuItem[] = [];
+    const items: TableMenuItem[] = [];
     if (options.columns?.selectorEnabled) items.push({ label: 'Modify columns', icon: options.columns.selectorIcon, command: () => this.columnSelectorShow() });
     if (options.header?.clearSortsEnabled) items.push({ label: 'Clear sorts', icon: options.header.clearSortsIcon, disabled: !this.hasToClearSorts(this.dt), command: () => this.clearSorts(this.dt) });
     if (options.header?.clearFiltersEnabled) items.push({ label: 'Clear filters', icon: options.header.clearFiltersIcon, disabled: !this.hasToClearFilters(this.dt, this.globalSearchText), command: () => this.clearFilters(this.dt) });
@@ -364,6 +377,8 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.cancelGlobalSearch();
     this.destroyed = true;
+    this.destroy$.next();
+    this.destroy$.complete();
     this.treeState?.cancel();
     const options = this.tableOptions.statePersistence;
     const key = options?.key?.trim();
@@ -518,7 +533,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.tableService.fetchTableConfiguration(this.tableOptions.urlTableConfiguration!)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      .pipe(takeUntil(this.destroy$)).subscribe({
       next: (response: HttpResponse<ITableConfiguration>) => {
         this.handleTableConfigurationResponse(response.body!, resetTableView);
       },
@@ -594,7 +609,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     }
     const tableViews = this.tableService.fetchTableViews(this.tableOptions.views!.saveMode!, this.tableOptions.views!.urlGet!, this.tableOptions.views!.saveKey!);
     if (tableViews instanceof Observable) {
-      tableViews.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      tableViews.pipe(takeUntil(this.destroy$)).subscribe({
         next: (response: HttpResponse<ITableView[]>) => {
            let parsedResult = response.body!.map((item: any) => ({
             viewAlias: item.viewAlias,
@@ -768,6 +783,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     this.viewsSaveEnd(endMessage);
   }
   viewsSaveEnd(endMessage: number){
+    this.changeDetector?.markForCheck();
     switch(endMessage){
       case 0: // NEW VIEW
         this.notification.showToast("info", this.i18n.text("Table view created"), this.i18n.text("New table view has been created."));
@@ -844,7 +860,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     }
     this.tableService.fetchTableData(this.tableOptions.urlTableData!, requestData)
       .pipe(
-        takeUntilDestroyed(this.destroyRef),
+        takeUntil(this.destroy$),
         finalize(() => {
           if (this.destroyed) return;
           this.onDataEndUpdate.emit(); // This is always executed after data update.
@@ -877,11 +893,11 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private selectorRowFilterBuilder(filtersWithoutGlobalAndSelectedRows: any, overrideOption: number = -1): void {
-    if (filtersWithoutGlobalAndSelectedRows.hasOwnProperty('selector')) {
-      const selectorFilter = filtersWithoutGlobalAndSelectedRows['selector'][0];
+    if (filtersWithoutGlobalAndSelectedRows.hasOwnProperty('selector') || overrideOption === 1 || overrideOption === 2) {
+      const selectorFilter = filtersWithoutGlobalAndSelectedRows['selector']?.[0];
       let filterType: boolean | null = null;
       if(overrideOption<0 || overrideOption>2){
-        filterType = selectorFilter.value;
+        filterType = selectorFilter?.value ?? null;
       } else {
         switch (overrideOption){
           case 0: // All
@@ -954,7 +970,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   private treeFetcher(query: ITableQueryRequest): (request: ITreeRequest) => Promise<ITreeResponse> {
     return async request => {
       const response = await firstValueFrom(this.tableService.fetchTableData(this.tableOptions.urlTableData!,
-        { ...structuredClone(query), ...request }).pipe(takeUntilDestroyed(this.destroyRef)));
+        { ...structuredClone(query), ...request }).pipe(takeUntil(this.destroy$)));
       if (!response.body) throw new Error('Empty tree response.');
       return response.body as ITreeResponse;
     };
@@ -1198,7 +1214,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     this.selectAllLoading = true;
     try {
       const response = await firstValueFrom(this.tableService.fetchSelectionKeys(options.urlSelectAll,
-        structuredClone(this.selectionQuery)).pipe(takeUntilDestroyed(this.destroyRef)));
+        structuredClone(this.selectionQuery)).pipe(takeUntil(this.destroy$)));
       if (this.destroyed || queryKey !== this.selectionQueryKey) return;
       if (!Array.isArray(response.body) || response.body.some(key =>
           typeof key !== 'string' && typeof key !== 'number')) throw new Error('Invalid selection identifiers.');
@@ -1408,4 +1424,10 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       }
     });
   }
+
+  ecsTrack1(index: number, button: any): any { return button; }
+  ecsTrack2(index: number, button: any): any { return index; }
+  ecsTrack3(index: number, group: any): any { return group.field; }
+  ecsTrack4(index: number, col: any): any { return col.header; }
+  ecsTrack5(index: number, col: any): any { return col.field; }
 }

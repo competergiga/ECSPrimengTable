@@ -1,15 +1,26 @@
 # Migración a los paquetes ComPeter
 
+> [!IMPORTANT]
+> **Guía histórica de cambio de nombre, no instrucciones de instalación para esta adaptación.** Las secciones siguientes conservan la migración Angular 19/PrimeNG 19 y .NET 8 de `Angular19-publish`; sus comandos de registro, versiones de frameworks y rutas de bundles no se aplican a esta copia local.
+>
+> La adaptación actual utiliza Angular **14.2.12**, PrimeNG **14.2.3**, TypeScript **4.8.4**, ngx-translate core **14.0.0** y HTTP loader **7.0.0**. Su manifiesto npm declara **14.2.0**, no una versión Angular 14 publicada. Compila con `npm ci`, `npx ng build ecs-primeng-table` y `npm pack ./dist/ecs-primeng-table`, e instala el `.tgz` local generado en la aplicación consumidora.
+>
+> El backend tiene como destino **net5.0**, con EF Core **5.0.17**, ClosedXML **0.102.3**, MemoryCache **6.0.3** y Packaging **6.0.1**. Para compilar necesita **SDK .NET 8+ / C# 12**; para ejecutar el ejemplo necesita los runtimes reales **.NET 5 y ASP.NET Core 5**. Conserva el identificador `ComPeter.PrimeNGTable` y la versión **8.2.0**, pero estos cambios no están publicados. Utiliza una referencia al proyecto o el `.nupkg` compilado localmente, no un paquete del registro suponiendo que contiene esta adaptación.
+>
+> Sigue las [instrucciones de integración actuales](README.es.md#3-integrating-into-a-project) para las compilaciones locales, dependencias, CSS de PrimeNG 14 y traducción con Angular 14. Angular 14, Node 16 y .NET 5 están fuera de soporte oficial.
+
+## Guía histórica de cambio de nombre para Angular 19
+
 Esta guía explica cómo migrar una aplicación existente desde los paquetes npm y NuGet originales de ECS a los paquetes renombrados de la rama `Angular19-publish`.
 
 ## Correspondencia de paquetes y alcance de las versiones
 
-| Plataforma | Paquete original | Paquete ComPeter | Versión declarada en esta rama |
+| Plataforma | Paquete original | Paquete ComPeter | Versión histórica en Angular19-publish |
 | --- | --- | --- | --- |
 | Angular / npm | `@eternalcodestudio/primeng-table` | `@competer/primeng-table` | `19.2.0` |
 | .NET / NuGet | `ECS.PrimeNGTable` | `ComPeter.PrimeNGTable` | `8.2.0` |
 
-Estas son las versiones declaradas en el repositorio; no se ha verificado que sean las últimas disponibles en los registros de paquetes. Consulta el [manifiesto npm](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) y el [proyecto .NET](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj).
+Estas eran las versiones declaradas para el cambio de nombre histórico; no se ha verificado que sean las últimas del registro. El [manifiesto npm](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) y el [proyecto .NET](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj) actuales describen la adaptación local resumida arriba.
 
 El cambio de nombre de los paquetes no cambia los nombres de las clases exportadas de Angular, el selector del componente ni los espacios de nombres de C#. El método que genera la configuración y sus modelos de respuesta son iguales en las ramas comparadas.
 

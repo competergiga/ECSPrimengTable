@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, Injectable, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
-import { SelectModule } from 'primeng/select';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule, RouterOutlet } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownModule } from 'primeng/dropdown';
 import { ECSPrimengTable, ECSPrimengTableStateService, ITableOptions, TreeLoadMode, TableViewSaveMode, createTableOptions } from 'ecs-primeng-table';
 
 @Injectable()
@@ -27,35 +28,35 @@ export class TreeDemoSettings {
   imports: [RouterOutlet],
   providers: [ECSPrimengTableStateService, TreeDemoSettings],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<router-outlet />'
+  template: `<router-outlet ></router-outlet>`
 })
 export class TreeDemoScope {}
 
 @Component({
   selector: 'ecs-tree-demo',
   standalone: true,
-  imports: [ECSPrimengTable, FormsModule, SelectModule, TranslatePipe],
+  imports: [CommonModule, ECSPrimengTable, FormsModule, DropdownModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section style="padding: 12px;">
       <h2>{{ 'Tree demo' | translate }}</h2>
       <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
         <label for="tree-mode">{{ 'Tree load mode' | translate }}</label>
-        <p-select inputId="tree-mode" [options]="settings.modes" optionLabel="label" optionValue="value"
+        <p-dropdown inputId="tree-mode" [options]="settings.modes" optionLabel="label" optionValue="value"
           [(ngModel)]="settings.mode" [ariaLabel]="'Tree load mode' | translate">
-          <ng-template #selectedItem let-item>{{ item.label | translate }}</ng-template>
-          <ng-template #item let-item>{{ item.label | translate }}</ng-template>
-        </p-select>
+          <ng-template pTemplate="selectedItem" let-item>{{ item.label | translate }}</ng-template>
+          <ng-template pTemplate="item" let-item>{{ item.label | translate }}</ng-template>
+        </p-dropdown>
         <label for="tree-storage">{{ 'Tree view storage' | translate }}</label>
-        <p-select inputId="tree-storage" [options]="settings.stores" optionLabel="label" optionValue="value"
+        <p-dropdown inputId="tree-storage" [options]="settings.stores" optionLabel="label" optionValue="value"
           [(ngModel)]="settings.storage" [ariaLabel]="'Tree view storage' | translate">
-          <ng-template #selectedItem let-item>{{ item.label | translate }}</ng-template>
-          <ng-template #item let-item>{{ item.label | translate }}</ng-template>
-        </p-select>
+          <ng-template pTemplate="selectedItem" let-item>{{ item.label | translate }}</ng-template>
+          <ng-template pTemplate="item" let-item>{{ item.label | translate }}</ng-template>
+        </p-dropdown>
       </div>
-      @for (key of [settings.key]; track key) {
-        <ecs-primeng-table [tableOptions]="options[key]" />
-      }
+      <ng-container *ngFor="let key of [settings.key]; trackBy: ecsTrack0; let $index = index; let $first = first; let $last = last; let $even = even; let $odd = odd; let $count = count">
+        <ecs-primeng-table [tableOptions]="options[key]" ></ecs-primeng-table>
+      </ng-container>
     </section>
   `
 })
@@ -93,12 +94,14 @@ export class TreeDemo {
       }
     }
   }
+
+  ecsTrack0(index: number, key: any): any { return key; }
 }
 
 @Component({
   selector: 'ecs-tree-detail',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section style="padding: 24px;">

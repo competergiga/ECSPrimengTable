@@ -130,7 +130,11 @@ namespace ECSPrimengTableExample.Controllers {
             try {
                 (bool success, byte[]? file, string errorMsg) = _service.GenerateExcelReport(inputData);
                 if(!success) {
-                    return BadRequest(errorMsg);
+                    return new ContentResult {
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        ContentType = "text/plain; charset=utf-8",
+                        Content = errorMsg
+                    };
                 }
                 return File(file!, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", inputData.Filename);
             } catch(Exception ex) { // Exception Handling: Returns a result with status code 500 (Internal Server Error) and an error message.

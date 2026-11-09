@@ -17,10 +17,11 @@ readonly tableOptions = createTableOptions({
 ```
 
 Añade `ECSPrimengTable` del mismo paquete a los `imports` del componente
-standalone y enlaza las opciones en su plantilla:
+standalone, declara `standalone: true` explícitamente (necesario en Angular 14)
+y enlaza las opciones en su plantilla:
 
 ```html
-<ecs-primeng-table [tableOptions]="tableOptions" />
+<ecs-primeng-table [tableOptions]="tableOptions"></ecs-primeng-table>
 ```
 
 La API devuelve registros planos, no arrays `children` anidados. Por ejemplo,
@@ -99,10 +100,10 @@ Para consultar la documentación completa, las instrucciones de uso, los ejemplo
 
 > **Nota:** Consulta el README de GitHub para obtener instrucciones detalladas sobre cómo integrar y utilizar este componente en tus proyectos.
 
-<a id="column-header-translations-angular-19"></a>
-## Traducción de los encabezados de columna (Angular 19)
+<a id="column-header-translations-angular-14"></a>
+## Traducción de los encabezados de columna (Angular 14)
 
-Instala `@ngx-translate/core@^17` en la aplicación que utiliza el componente y configura `provideTranslateService` una sola vez entre los proveedores de la aplicación. Si ya utiliza ngx-translate, reutiliza su proveedor y sus diccionarios.
+Instala `@ngx-translate/core@14` en la aplicación que utiliza el componente y configura `TranslateModule.forRoot` una sola vez entre los proveedores de la aplicación. Si ya utiliza ngx-translate, reutiliza su proveedor y sus diccionarios.
 
 La tabla y el selector de columnas muestran `header | translate`. El selector busca y ordena las etiquetas traducidas, y se actualiza al cambiar de idioma. Los metadatos no se sobrescriben: `field`, los valores de las celdas, los filtros, las vistas guardadas y las exportaciones a Excel del servidor mantienen su comportamiento. Las demás etiquetas de la interfaz también admiten traducción.
 
@@ -120,24 +121,40 @@ Por ejemplo, `es.json` contiene:
 Instala el cargador en la aplicación (la biblioteca de la tabla solo necesita el paquete core):
 
 ```sh
-npm install @ngx-translate/core@^17 @ngx-translate/http-loader@^17
+npm install @ngx-translate/core@14 @ngx-translate/http-loader@7
 ```
 
-Configúralo una sola vez en `app.config.ts`, junto al `provideHttpClient()` existente:
+Configúralo una sola vez en `app.config.ts` con los proveedores de módulos de Angular 14:
 
 ```ts
-import { provideTranslateService } from '@ngx-translate/core';
-import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { importProvidersFrom } from '@angular/core';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-provideTranslateService({
-  lang: 'es',
-  fallbackLang: 'en',
-  loader: provideTranslateHttpLoader({
-    prefix: './assets/i18n/',
-    suffix: '.json'
-  })
-})
+export function translateLoader(http: HttpClient): TranslateHttpLoader {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export const appConfig = {
+  providers: [importProvidersFrom(
+    HttpClientModule,
+    TranslateModule.forRoot({
+      defaultLanguage: 'en',
+      loader: { provide: TranslateLoader, useFactory: translateLoader, deps: [HttpClient] }
+    })
+  )]
+};
 ```
+
+Importa `TranslateModule` en cada componente standalone que utilice el pipe
+`translate`; en Angular 14 no importes `TranslatePipe` ni `TranslateDirective` directamente.
+Llama a `TranslateService.use('es')` al inicializar la aplicación para seleccionar
+el idioma inicial. `setDefaultLang('en')` define el idioma de respaldo en ngx-translate 14.
+En aplicaciones NgModule, añade `HttpClientModule` y `TranslateModule.forRoot(...)`
+a los `imports` del módulo raíz, y `TranslateModule` a los módulos de funcionalidad.
+PrimeNG 14 utiliza `PrimeNGConfig` de `primeng/api` y temas CSS de
+`primeng/resources/themes`, no `providePrimeNG` ni presets de `@primeng/themes`.
 
 Si la aplicación ya utiliza ngx-translate, reutiliza su proveedor y añade las claves de los encabezados a sus diccionarios JSON, en lugar de configurar otro cargador.
 
@@ -145,7 +162,7 @@ Llama a `TranslateService.use('en')`, `use('es')`, `use('fr')` o `use('it')` par
 
 Como alternativa, devuelve `header: 'columns.username'` desde el backend y define `{ "columns": { "username": "Usuario" } }` en el archivo JSON de español.
 
-Consulta la guía completa en [Encabezados de columna multilingües](../../../../README.es.md#324-multilanguage-column-headers-angular-19).
+La configuración anterior para Angular 14 sustituye las APIs de proveedores de la guía original de Angular 19.
 
 <a id="optional-navigation-state"></a>
 ## Conservación opcional del estado durante la navegación
@@ -167,7 +184,7 @@ tableOptions = createTableOptions({
 });
 ```
 
-Registra `providers: [ECSPrimengTableStateService]` en un componente padre con un `<router-outlet />` y sitúa las rutas de lista y detalle bajo él. Utiliza Angular Router para navegar entre ellas. Para activar esta función, la tabla necesita una clave no vacía y el proveedor del servicio dentro de ese ámbito.
+Registra `providers: [ECSPrimengTableStateService]` en un componente padre con un `<router-outlet></router-outlet>` y sitúa las rutas de lista y detalle bajo él. Utiliza Angular Router para navegar entre ellas. Para activar esta función, la tabla necesita una clave no vacía y el proveedor del servicio dentro de ese ámbito.
 
 Al volver del detalle, se restaura la consulta y se solicitan los datos actualizados. Al salir del ámbito hacia otra sección, se descarta la consulta, al igual que al recargar el navegador. Establecer `enabled` en `false` no borra los filtros que aparecen en pantalla: impide que se conserven para la siguiente navegación. Las vistas de inicio guardadas explícitamente son independientes de esta opción.
 

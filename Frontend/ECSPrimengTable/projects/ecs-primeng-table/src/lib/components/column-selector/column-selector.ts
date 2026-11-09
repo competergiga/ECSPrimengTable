@@ -1,8 +1,7 @@
 import { ECSTableTranslatePipe } from '../../pipes/ui-translate.pipe';
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, ViewChild } from '@angular/core';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { merge } from 'rxjs';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, ViewChild } from '@angular/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { merge, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -11,8 +10,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CellOverflowBehaviour, DataAlignHorizontal, DataAlignVertical } from '../../enums';
-import { InputIconModule } from 'primeng/inputicon';
-import { IconFieldModule } from 'primeng/iconfield';
 import { InputTextModule } from 'primeng/inputtext';
 import { IColumnMetadata } from '../../interfaces';
 import { TooltipModule } from 'primeng/tooltip';
@@ -22,7 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
   selector: 'ecs-column-selector',
   imports: [
     ECSTableTranslatePipe,
-    TranslatePipe,
+    TranslateModule,
     DialogModule,
     TableModule,
     CheckboxModule,
@@ -30,20 +27,19 @@ import { TooltipModule } from 'primeng/tooltip';
     SelectButtonModule,
     CommonModule,
     FormsModule,
-    InputIconModule,
-    IconFieldModule,
     InputTextModule,
     TooltipModule
   ],
   standalone: true,
   templateUrl: './column-selector.html'
 })
-export class ColumnSelector implements OnChanges {
+export class ColumnSelector implements OnChanges, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   @Input() orderByHeader = false;
 
   constructor(private translate: TranslateService, changeDetector: ChangeDetectorRef) {
-    merge(translate.onLangChange, translate.onTranslationChange, translate.onFallbackLangChange)
-      .pipe(takeUntilDestroyed())
+    merge(translate.onLangChange, translate.onTranslationChange, translate.onDefaultLangChange)
+      .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.updateVisibleColumns();
         changeDetector.markForCheck();
@@ -53,6 +49,11 @@ export class ColumnSelector implements OnChanges {
   ngOnChanges(): void {
     if (!this.visible) this.globalSearchText = null;
     this.updateVisibleColumns();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private updateVisibleColumns(): void {

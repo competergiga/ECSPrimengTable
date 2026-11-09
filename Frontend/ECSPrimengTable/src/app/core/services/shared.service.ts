@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { catchError, timeout  } from 'rxjs/operators';
-import { Observable, throwError, map, OperatorFunction } from 'rxjs';
-import { Injectable, signal } from '@angular/core';
+import { catchError, mergeMap, timeout  } from 'rxjs/operators';
+import { from, Observable, throwError, map, OperatorFunction } from 'rxjs';
+import { Injectable } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -11,7 +11,7 @@ import { Constants, log } from '../../../constants';
   providedIn: 'root'
 })
 export class SharedService {
-  readonly lastRowRetrievalMs = signal<number | null>(null);
+  lastRowRetrievalMs: number | null = null;
   constructor(private readonly messageService: MessageService, private readonly http: HttpClient, private readonly router: Router, private readonly sanitizer: DomSanitizer) {}
   // #region showToast
     /**
@@ -88,6 +88,12 @@ export class SharedService {
       } else {
         if (customErrorHandler) {
           return customErrorHandler(error);
+        }
+        if (error.status === 400 && error.error instanceof Blob && error.error.type.startsWith('text/plain')) {
+          const errorBody: Blob = error.error;
+          return from(errorBody.text()).pipe(
+            mergeMap(message => throwError(() => new Error(message.trim() || 'Unexpected error')))
+          );
         }
         if (showAPIError) {
           return throwError(() => new Error(error.error.message));

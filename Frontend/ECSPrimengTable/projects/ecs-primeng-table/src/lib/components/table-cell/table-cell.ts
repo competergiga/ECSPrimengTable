@@ -15,7 +15,7 @@ import { TablePredefinedFilters } from "../table-predefined-filters/table-predef
 ],
   standalone: true,
   templateUrl: './table-cell.html',
-  styleUrl: './table-cell.scss'
+  styleUrls: ['./table-cell.scss']
 })
 export class TableCell {
   constructor(
@@ -153,4 +153,7 @@ export class TableCell {
   highlightText(cellValue: any, colMetadata: IColumnMetadata, globalSearchText: string | null): SafeHtml {
       return highlightText(cellValue, colMetadata, globalSearchText, this.sanitizer);
   }
+
+  ecsTrack6(index: number, item: any): any { return index; }
+  ecsTrack7(index: number, item: any): any { return index; }
 }

@@ -78,6 +78,12 @@ namespace ECS.PrimengTable.Services {
                 long totalRecords = 0; // Initialize counter of filtered record count
                 string fieldName; // Used to track the name of the current column
                 TableQueryProcessingService.GetDynamicQueryBase<T>(ref inputData, ref baseQuery, ref totalRecordsNotFiltered, ref totalRecords, stringDateFormatMethod, defaultSortColumnName, defaultSortOrder, dynamicAttributes, !preparedTreeQuery, !preparedTreeQuery && inputDataAll.ApplyFilters); // Execute dynamic query pipeline (filter, sort, etc.)
+                int maximumDataRows = XLHelper.MaxRowNumber - 2;
+                if (totalRecords > maximumDataRows) {
+                    return (false, null, $"The export contains {totalRecords.ToString("N0", CultureInfo.InvariantCulture)} rows. " +
+                        $"An Excel worksheet supports at most {maximumDataRows.ToString("N0", CultureInfo.InvariantCulture)} data rows in this report. " +
+                        "Apply filters or select fewer rows before exporting.");
+                }
                 using(XLWorkbook workbook = new()) { // Create Excel workbook
                     IXLWorksheet worksheet = workbook.AddWorksheet(sheetName); // Add the new worksheet that will have the data
                     int numberOfColumns = inputData.Columns!.Count; // Get the number of columns

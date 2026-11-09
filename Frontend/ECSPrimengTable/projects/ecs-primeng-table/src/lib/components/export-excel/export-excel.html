@@ -22,7 +22,7 @@
             {{ 'Include time in report filename?' | ecsTranslate }}
         </div>
         <div style="justify-self: stretch; width: 100%;">
-            <p-checkbox [binary]="true" [(ngModel)]="includeTimeInTitle"/>
+            <p-checkbox [binary]="true" [(ngModel)]="includeTimeInTitle"></p-checkbox>
         </div>
 
         <div style="justify-self: end;">
@@ -35,44 +35,44 @@
             {{ 'Use icons in boolean fields?' | ecsTranslate }}
         </div>
         <div style="justify-self: stretch; width: 100%;">
-            <p-checkbox [binary]="true" [(ngModel)]="exportUseIconsInBools"/>
+            <p-checkbox [binary]="true" [(ngModel)]="exportUseIconsInBools"></p-checkbox>
         </div>
 
         <div style="justify-self: end;">
             {{ 'Export columns' | ecsTranslate }}
         </div>
         <div style="justify-self: start;">
-            <p-selectButton [(ngModel)]="option_exportColumns_selected" [options]="translatedOptions(option_exportColumns)" optionLabel="label" optionValue="value" allowEmpty="false"><ng-template #item let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
+            <p-selectButton [(ngModel)]="option_exportColumns_selected" [options]="translatedOptions(option_exportColumns)" optionLabel="label" optionValue="value" allowEmpty="false"><ng-template pTemplate="item" let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
         </div>
 
         <div style="justify-self: end;">
-            @if(filterSelectorDisabled()){
+            <ng-container *ngIf="filterSelectorDisabled()">
                 <i [pTooltip]="'Sorts are active because you want to export selected rows following a filter criteria' | ecsTranslate" tooltipPosition="top" class="pi pi-info-circle"></i>
-            }
+            </ng-container>
             {{ 'Filters to apply' | ecsTranslate }}
         </div>
         <div style="justify-self: start;">
-            <p-selectButton [(ngModel)]="option_applyCurrentFilters_selected" [options]="translatedOptions(option_applyCurrentFilters)" optionLabel="label" optionValue="value" allowEmpty="false" [disabled]="filterSelectorDisabled()"><ng-template #item let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
+            <p-selectButton [(ngModel)]="option_applyCurrentFilters_selected" [options]="translatedOptions(option_applyCurrentFilters)" optionLabel="label" optionValue="value" allowEmpty="false" [disabled]="filterSelectorDisabled()"><ng-template pTemplate="item" let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
         </div>
 
         <div style="justify-self: end;">
             {{ 'Sorts to apply' | ecsTranslate }}
         </div>
         <div style="justify-self: start;">
-            <p-selectButton [(ngModel)]="option_applyCurrentSorts_selected" [options]="translatedOptions(option_applyCurrentSorts)" optionLabel="label" optionValue="value" allowEmpty="false"><ng-template #item let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
+            <p-selectButton [(ngModel)]="option_applyCurrentSorts_selected" [options]="translatedOptions(option_applyCurrentSorts)" optionLabel="label" optionValue="value" allowEmpty="false"><ng-template pTemplate="item" let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
         </div>
 
-        @if(rowCheckboxSelectorActive){
+        <ng-container *ngIf="rowCheckboxSelectorActive">
             <div style="justify-self: end;">
                 {{ 'Selected rows' | ecsTranslate }}
             </div>
             <div style="justify-self: start;">
-                <p-selectButton [(ngModel)]="option_selectedRowsExport_selected" [options]="translatedOptions(option_selectedRowsExport)" optionLabel="label" optionValue="value" allowEmpty="false" (onChange)="onChangeExportRows($event)"><ng-template #item let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
+                <p-selectButton [(ngModel)]="option_selectedRowsExport_selected" [options]="translatedOptions(option_selectedRowsExport)" optionLabel="label" optionValue="value" allowEmpty="false" (onChange)="onChangeExportRows($event)"><ng-template pTemplate="item" let-option>{{ option.label | ecsTranslate }}</ng-template></p-selectButton>
             </div>
-        }
+        </ng-container>
     </div>
     <ng-template pTemplate="footer" style="display: flex; justify-content: space-between; align-items: center;">
-        <p-button (click)="closeModal()" [label]="'Cancel export' | ecsTranslate" outlined="true" [style]="{'margin-top': '20px'}"/>
-        <p-button (click)="getExcelReport()" [label]="'Export' | ecsTranslate" [style]="{'margin-top': '20px'}"/>
+        <p-button (click)="closeModal()" [label]="'Cancel export' | ecsTranslate" outlined="true" [style]="{'margin-top': '20px'}"></p-button>
+        <p-button (click)="getExcelReport()" [label]="'Export' | ecsTranslate" [style]="{'margin-top': '20px'}"></p-button>
     </ng-template>
 </p-dialog>

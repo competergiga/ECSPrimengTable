@@ -7,25 +7,25 @@
     </ng-template>
     <div class="p-4 pt-0">
         <p-table #dt_viewsDialog [value]="tableViews_menuItems" [scrollable]="true" size="small" showGridlines stripedRows scrollHeight="400px" [tableStyle]="{'min-width': '25rem'}">
-            <ng-template #caption>
+            <ng-template pTemplate="caption">
                 <div style="display: flex; justify-content: flex-end; align-items: center; width: 100%;">
-                    <p-button icon="pi pi-plus" [label]="'New view' | ecsTranslate" (click)="showViewEditor()" [pTooltip]="'New view' | ecsTranslate" tooltipPosition="top" [showDelay]="700"/>
+                    <p-button icon="pi pi-plus" [label]="'New view' | ecsTranslate" (click)="showViewEditor()" [pTooltip]="'New view' | ecsTranslate" tooltipPosition="top" [showDelay]="700"></p-button>
                 </div>
             </ng-template>
-            <ng-template #header>
+            <ng-template pTemplate="header">
                 <tr>
                     <th style="text-align: center;">{{ 'View name' | ecsTranslate }}</th>
                     <th style="text-align: center; max-width: 220px; min-width: 220px; width: 220px;">{{ 'Load on startup' | ecsTranslate }}</th>
                     <th style="text-align: center; max-width: 220px; min-width: 220px; width: 220px;">{{ 'Actions' | ecsTranslate }}</th>
                 </tr>
             </ng-template>
-            <ng-template #body let-rowData>
+            <ng-template pTemplate="body" let-rowData>
                 <tr>
                     <td>
                         {{rowData.label}}
                     </td>
                     <td style="text-align: center; max-width: 220px; min-width: 220px; width: 220px;">
-                        <p-checkbox [(ngModel)]="rowData.lastActive" [binary]="true" (onChange)="updateViewActiveStartup(rowData.label)"/>
+                        <p-checkbox [(ngModel)]="rowData.lastActive" [binary]="true" (onChange)="updateViewActiveStartup(rowData.label)"></p-checkbox>
                     </td>
                     <td style="max-width: 220px; min-width: 220px; width: 220px; display: flex; justify-content: center; align-items: center; height: 100%;">
                         <button pButton icon="pi pi-upload" (click)="loadView(rowData.label);" [showDelay]="700" [pTooltip]="'Restore' | ecsTranslate" tooltipPosition="top" size="small" class="p-button-sm" style="height: 28px; margin-right: 10px;"></button>
@@ -35,7 +35,7 @@
                     </td>
                 </tr>
             </ng-template>
-            <ng-template #emptymessage>
+            <ng-template pTemplate="emptymessage">
                 <tr>
                     <td colspan="999">{{ 'There are no views' | ecsTranslate }}</td>
                 </tr>

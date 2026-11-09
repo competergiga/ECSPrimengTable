@@ -16,7 +16,7 @@ import { ITableButton } from '../../interfaces';
   ],
   standalone: true,
   templateUrl: './table-button.html',
-  styleUrl: './table-button.scss'
+  styleUrls: ['./table-button.scss']
 })
 export class TableButton {
   constructor(

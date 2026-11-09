@@ -3,9 +3,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": "../..",
     "outDir": "../../out-tsc/lib",
     "declaration": true,
     "declarationMap": true,
+    "sourceMap": true,
     "inlineSources": true,
     "types": []
   },

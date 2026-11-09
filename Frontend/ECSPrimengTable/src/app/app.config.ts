@@ -1,49 +1,36 @@
-import { provideTranslateService } from '@ngx-translate/core';
-import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { importProvidersFrom } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { routes } from './app.routes';
 
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { providePrimeNG } from 'primeng/config';
-import { Preset } from './themes/preset';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { SharedService } from './core/services/shared.service';
 import { ECSPrimengTableHttpService, ECSPrimengTableNotificationService } from 'ecs-primeng-table';
 import { NotificationService } from './core/services/notification.service';
 import { HttpService } from './core/services/http.service';
-import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
 import { SpinnerInterceptor } from './core/interceptors/spinner.interceptor';
 
 import { DatePipe, registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 registerLocaleData(en);
 
-export const appConfig: ApplicationConfig = {
+export function translateLoader(http: HttpClient): TranslateHttpLoader {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export const appConfig = {
   providers: [
-    provideTranslateService({
-      lang: 'es',
-      fallbackLang: 'en',
-      loader: provideTranslateHttpLoader({
-        prefix: './assets/i18n/',
-        suffix: '.json'
+    importProvidersFrom(
+      HttpClientModule,
+      BrowserAnimationsModule,
+      RouterModule.forRoot(routes),
+      TranslateModule.forRoot({
+        defaultLanguage: 'en',
+        loader: { provide: TranslateLoader, useFactory: translateLoader, deps: [HttpClient] }
       })
-    }),
-    provideAnimationsAsync(),
-    providePrimeNG({
-        theme: {
-          preset: Preset,
-          options: {
-            darkModeSelector: 'none'
-          }
-        },
-        ripple: true
-      }),
-    provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(
-      withInterceptorsFromDi(),
-      withFetch()
     ),
     {
       provide: HTTP_INTERCEPTORS,

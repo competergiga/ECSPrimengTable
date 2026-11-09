@@ -696,7 +696,7 @@ export const DEFAULT_TABLE_OPTIONS: ITableOptions = {
     },
     columns: {
         selectorEnabled: true,
-        selectorIcon: "pi pi-pen-to-square",
+        selectorIcon: "pi pi-pencil",
         selectorOrderByColumnName: true,
         shown: []
     },

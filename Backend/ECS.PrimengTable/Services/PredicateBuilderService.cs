@@ -219,7 +219,7 @@ namespace ECS.PrimengTable.Services {
         }
 
         internal static Expression<Func<T, bool>> CreateListFilterPredicate<T>(MemberExpression property, dynamic filterValue) {
-            dynamic filterValuesDeserialized = JsonSerializer.Deserialize((JsonElement)filterValue, typeof(string))!.ToString()!.ToUpper();
+            dynamic filterValuesDeserialized = JsonSerializer.Deserialize(((JsonElement)filterValue).GetRawText(), typeof(string))!.ToString()!.ToUpper();
             MethodCallExpression toUpperMethod = Expression.Call(property, "ToUpper", null);
             dynamic listContains = Expression.Call(toUpperMethod, "Contains", null, Expression.Constant(filterValuesDeserialized));
             return Expression.Lambda<Func<T, bool>>(listContains, property.Expression as ParameterExpression);

@@ -4,21 +4,23 @@ import { inject, Component, EventEmitter, Input, OnChanges, Output, SimpleChange
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { SelectButton, SelectButtonChangeEvent } from 'primeng/selectbutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ECSPrimengTableNotificationService } from '../../services';
 import { ExportExcelService } from './export-excel.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'ecs-export-excel',
   imports: [
+    CommonModule,
     ECSTableTranslatePipe,
     DialogModule,
     FormsModule,
     ButtonModule,
-    SelectButton,
+    SelectButtonModule,
     InputTextModule,
     TooltipModule,
     CheckboxModule
@@ -28,6 +30,10 @@ import { CheckboxModule } from 'primeng/checkbox';
 })
 export class ExportExcel implements OnChanges {
   private readonly i18n = inject(ECSPrimengTableI18nService);
+  private readonly translatedOptionSets = new WeakMap<
+    { label: string; value: boolean | number }[],
+    { label: string; value: boolean | number }[]
+  >();
   @Input() visible: boolean = false;
   @Input() rowCheckboxSelectorActive: boolean = false;
   @Input() excelReportTitle: string = "";
@@ -120,14 +126,22 @@ export class ExportExcel implements OnChanges {
   }
 
   translatedOptions(options: { label: string; value: boolean | number }[]) {
-    return options.map(option => ({ ...option, label: this.i18n.text(option.label) }));
+    const labels = options.map(option => this.i18n.text(option.label));
+    const cached = this.translatedOptionSets.get(options);
+    if (cached?.length === options.length && cached.every((option, index) =>
+      option.label === labels[index] && option.value === options[index].value)) {
+      return cached;
+    }
+    const translated = options.map((option, index) => ({ ...option, label: labels[index] }));
+    this.translatedOptionSets.set(options, translated);
+    return translated;
   }
 
   filterSelectorDisabled(): boolean{
     return this.option_selectedRowsExport_selected >= 1;
   }
 
-  onChangeExportRows(event: SelectButtonChangeEvent): void{
+  onChangeExportRows(event: { value: number }): void{
     if(event.value>=1){
       this.option_applyCurrentFilters_selected=true;
     }

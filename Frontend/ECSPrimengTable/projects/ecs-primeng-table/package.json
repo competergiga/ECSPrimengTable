@@ -1,6 +1,6 @@
 {
   "name": "@competer/primeng-table",
-  "version":"19.2.0",
+  "version":"14.2.0",
   "description": "Community-maintained fork of ECS. Reusable Angular PrimeNG table component with advanced server-side filters. Designed to offload filtering logic to any backend API.",
   "author": "ECS (Eternal CODE Studio); ComPeter",
   "license": "MIT",
@@ -14,19 +14,21 @@
     "ui"
   ],
   "peerDependencies": {
-    "@angular/common": ">=19.0.0",
-    "@angular/core": ">=19.0.0",
-    "@angular/animations": ">=19.0.0",
-    "primeng": ">=19.0.0",
-    "primeicons": ">=7.0.0",
-    "@ngx-translate/core": "^17.0.0"
+    "@angular/common": ">=14.2.0 <15.0.0",
+    "@angular/core": ">=14.2.0 <15.0.0",
+    "@angular/animations": ">=14.2.0 <15.0.0",
+    "@angular/forms": ">=14.2.0 <15.0.0",
+    "primeng": ">=14.2.0 <15.0.0",
+    "primeicons": "^6.0.1",
+    "@ngx-translate/core": "^14.0.0",
+    "rxjs": "^6.5.3 || ^7.4.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": "^14.15.0 || ^16.10.0",
+    "npm": ">=6.11.0"
   },
   "repository": {
     "type": "git",

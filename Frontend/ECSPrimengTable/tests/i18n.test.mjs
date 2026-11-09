@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { createEnvironmentInjector } from '@angular/core';
 import { TranslateService, TranslateDefaultParser } from '@ngx-translate/core';
-import { PrimeNG } from 'primeng/config';
+import { PrimeNGConfig } from 'primeng/api';
 import { Subject } from 'rxjs';
-import { ECSPrimengTableI18nService } from '../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs';
+import { ECSPrimengTableI18nService } from '../dist/ecs-primeng-table/fesm2020/competer-primeng-table.mjs';
 
 test('missing providers retain English and interpolate counter defaults', () => {
  const injector = createEnvironmentInjector([ECSPrimengTableI18nService]);
@@ -20,11 +20,12 @@ test('missing providers retain English and interpolate counter defaults', () => 
 test('PrimeNG locale updates preserve unspecified configuration and clean up subscriptions', () => {
  const changes = new Subject();
  let dictionary = {};
- const translate = {onLangChange: changes, onTranslationChange: new Subject(), onFallbackLangChange: new Subject(),
+ const translate = {onLangChange: changes, onTranslationChange: new Subject(), onDefaultLangChange: new Subject(),
  instant: (key, params) => typeof dictionary[key] === 'string' ? new TranslateDefaultParser().interpolate(dictionary[key], params) : dictionary[key] ?? key};
  const prime = {translation: {accept:'Accept', dateFormat:'yy-mm-dd', aria:{close:'Close', next:'Next'}},
+ getTranslation(key) {return this.translation[key];},
  setTranslation(value) {this.translation = value;}};
- const injector = createEnvironmentInjector([ECSPrimengTableI18nService, {provide:TranslateService,useValue:translate}, {provide:PrimeNG,useValue:prime}]);
+ const injector = createEnvironmentInjector([ECSPrimengTableI18nService, {provide:TranslateService,useValue:translate}, {provide:PrimeNGConfig,useValue:prime}]);
  const ui = injector.get(ECSPrimengTableI18nService);
  ui.connectPrimeNG(); ui.connectPrimeNG();
  dictionary = {primeng:{accept:'Aceptar', aria:{close:'Cerrar'}}, 'View {{name}}':'Vista {{name}}'};

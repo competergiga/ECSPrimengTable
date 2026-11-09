@@ -7,7 +7,7 @@ import { resolve, extname } from 'node:path';
 import assert from 'node:assert/strict';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const root = resolve('dist/ECSPrimengTable/browser');
+const root = resolve('dist/ECSPrimengTable');
 const server = createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   const path = resolve(root, '.' + pathname);
@@ -76,7 +76,7 @@ try {
  await page.getByPlaceholder(dictionaries.es['Search keyword'], { exact: true }).waitFor();
  await page.getByRole('button', { name: dictionaries.es.CREATE, exact: true }).waitFor();
  assert.equal(await page.getByText('Ana', { exact: true }).count(), 1);
- await page.locator('th#username-header .p-datatable-column-filter-button').click();
+ await page.locator('th#username-header .p-column-filter-menu-button').click();
  await page.getByRole('button', { name: dictionaries.es.primeng.apply, exact: true }).waitFor();
  await page.keyboard.press('Escape');
  assert.deepEqual(errors, []);

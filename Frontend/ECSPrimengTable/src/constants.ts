@@ -15,7 +15,7 @@ function getIsDevelopment(): boolean {
     function getApiBaseUrl(): string {
         if (isDevelopment) { // Check if we are in development
             log(1, "POINTING TO DEVELOPMENT API");
-            return 'https://localhost:7020/';
+            return 'http://localhost:5014/';
         } else { // If we are in production
             return 'YourProdURL';
         }

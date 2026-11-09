@@ -1,13 +1,13 @@
 import '@angular/compiler';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createEnvironmentInjector, runInInjectionContext } from '@angular/core';
+import { createEnvironmentInjector } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { of, Subject } from 'rxjs';
 import {
   TreeTableState, ECSPrimengTable, ECSPrimengTableStateService, ECSPrimengTableI18nService,
   createTableOptions, DataType, TableViewSaveMode
-} from '../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs';
+} from '../dist/ecs-primeng-table/fesm2020/competer-primeng-table.mjs';
 
 const options = mode => ({ keyExpr: 'id', parentIdExpr: 'parentId', rootValue: 0,
   hasItemsExpr: 'hasChildren', column: 'text', loadMode: mode });
@@ -146,7 +146,7 @@ function componentHarness(parent, { mode = 'onDemand', key = mode, storage, save
     viewGenerateData: (_table, search, page, size) => ({ columnsShown: [{ field: 'text' }], globalSearchText: search,
       currentPage: page, currentRowsPerPage: size, filters: {}, multiSortMeta: [], tableWidth: '', columnsWidth: '' })
   };
-  const component = runInInjectionContext(injector, () => new ECSPrimengTable(service, { showToast() {} }));
+  const component = injector.runInContext(() => new ECSPrimengTable(service, { showToast() {} }));
   component.tableOptions = createTableOptions({ tree: options(mode), statePersistence: { enabled: true, key },
     urlTableConfiguration: '/tree/config', urlTableData: '/tree/data',
     rows: { checkboxSelector: { enabled: true }, singleSelector: { enabled: true } },

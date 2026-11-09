@@ -1,6 +1,6 @@
 <nav aria-label="Ejemplos" style="display: flex; gap: 12px; padding: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--p-content-border-color, #ddd);">
   <label>{{ 'Language' | translate }}
-    <select [attr.aria-label]="'Language' | translate" [ngModel]="translate.getCurrentLang()" (ngModelChange)="translate.use($event)">
+    <select [attr.aria-label]="'Language' | translate" [ngModel]="translate.currentLang" (ngModelChange)="translate.use($event)">
       <option value="es">Español</option><option value="en">English</option>
       <option value="fr">Français</option><option value="it">Italiano</option>
     </select>
@@ -9,14 +9,14 @@
   <a routerLink="/progress" routerLinkActive="demo-active" [attr.aria-current]="progressLink.isActive ? 'page' : null" #progressLink="routerLinkActive">{{ 'Barras de progreso' | translate }}</a>
   <a routerLink="/tree" routerLinkActive="demo-active" [attr.aria-current]="treeLink.isActive ? 'page' : null" #treeLink="routerLinkActive">{{ 'Tree demo' | translate }}</a>
   <a routerLink="/other" routerLinkActive="demo-active">{{ 'Otra sección' | translate }}</a>
-  @if (lastRowRetrievalMs() !== null) {
+  <ng-container *ngIf="lastRowRetrievalMs !== null">
     <span role="status" data-testid="row-retrieval-time" style="margin-left: auto; font-variant-numeric: tabular-nums;">
       <i class="pi pi-clock" aria-hidden="true"></i>
-      {{ 'Last row retrieval' | translate }}: {{ lastRowRetrievalMs() | number:'1.0-0' }} ms
+      {{ 'Last row retrieval' | translate }}: {{ lastRowRetrievalMs | number:'1.0-0' }} ms
     </span>
-  }
+  </ng-container>
 </nav>
-<router-outlet/>
+<router-outlet></router-outlet>
 
 <!--LOADING INDICATOR-->
 <p-dialog header="Please, wait..." [(visible)]="isSpinnerVisible" [closeOnEscape]="false" [closable]="false" [modal]="true" [draggable]="false" [resizable]="false" [showHeader]="true">
@@ -25,4 +25,4 @@
   </div>
 </p-dialog>
 
-<p-toast/>
+<p-toast></p-toast>

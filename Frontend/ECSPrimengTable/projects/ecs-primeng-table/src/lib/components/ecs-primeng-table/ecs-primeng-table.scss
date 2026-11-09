@@ -28,6 +28,17 @@
   border-radius: 0 !important;
 }
 
+.ecs-view-buttons {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.ecs-view-buttons > p-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
 .viewButton {
   width: 200px;
 }
@@ -48,6 +59,9 @@
 .ecs-compact-header { gap: 0.5rem; min-width: 0; }
 .ecs-header-menu-trigger { margin-left: auto; flex: 0 0 auto; }
 .ecs-responsive-trigger { min-width: 44px; min-height: 44px; }
+.ecs-global-search { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.ecs-global-search > .ecs-input-icon { display: inline-flex; flex: 0 0 auto; }
+.ecs-global-search input { min-width: 0; }
 .ecs-responsive-search { flex: 1 1 220px; min-width: 0; max-width: 320px; }
 .ecs-responsive-search input { width: 100%; padding-right: 2.5rem; }
 .ecs-clear-search { border: 0; background: transparent; color: inherit; cursor: pointer; }

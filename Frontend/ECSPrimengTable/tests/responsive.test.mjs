@@ -1,8 +1,8 @@
 import '@angular/compiler';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createEnvironmentInjector, runInInjectionContext } from '@angular/core';
-import { ECSPrimengTableI18nService, ECSPrimengTable, createTableOptions, DeviceType, FrozenColumnAlign } from '../dist/ecs-primeng-table/fesm2022/competer-primeng-table.mjs';
+import { createEnvironmentInjector } from '@angular/core';
+import { ECSPrimengTableI18nService, ECSPrimengTable, createTableOptions, DeviceType, FrozenColumnAlign } from '../dist/ecs-primeng-table/fesm2020/competer-primeng-table.mjs';
 
 test('header groups follow contiguous visible columns after reorder and hiding', () => {
   const x = setup();
@@ -23,7 +23,7 @@ test('header groups follow contiguous visible columns after reorder and hiding',
 
 function setup(options = {}, width = 1400) {
   const injector = createEnvironmentInjector([ECSPrimengTableI18nService]);
-  const c = runInInjectionContext(injector, () => new ECSPrimengTable({
+  const c = injector.runInContext(() => new ECSPrimengTable({
     orderColumnsWithFrozens: columns => columns,
     handleButtonsClick: (action, row) => action(row)
   }, { showToast() {} }));
@@ -136,6 +136,32 @@ test('menu preserves visibility/disabled rules and dispatches to the correct row
   const row = { allowed: true };
   const item = x.c.buttonMenuItems([{ enabledCondition: r => r.allowed, action: () => assert.fail('stale permission') }], row)[0];
   row.allowed = false; item.command();
+  x.close();
+});
+
+test('Escape closes both responsive overlays, including when menus are absent', () => {
+  const x = setup();
+  x.c.closeResponsiveMenus();
+  const closed = [];
+  x.c.responsiveHeaderMenu = { hide() { closed.push('header'); } };
+  x.c.responsiveRowMenu = { hide() { closed.push('row'); } };
+
+  x.c.closeResponsiveMenus();
+
+  assert.deepEqual(closed, ['header', 'row']);
+  x.close();
+});
+
+test('creating a saved view marks an OnPush parent for update and closes the dialog', () => {
+  const x = setup();
+  let updates = 0;
+  x.c.changeDetector = { markForCheck() { updates++; } };
+  x.c.viewsModalShow = true;
+
+  x.c.viewsSaveEnd(0);
+
+  assert.equal(x.c.viewsModalShow, false);
+  assert.equal(updates, 1);
   x.close();
 });
 

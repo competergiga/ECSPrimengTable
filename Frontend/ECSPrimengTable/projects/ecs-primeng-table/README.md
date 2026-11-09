@@ -17,10 +17,10 @@ readonly tableOptions = createTableOptions({
 ```
 
 Add `ECSPrimengTable` from the same package to your standalone component's
-`imports`, then bind the options in its template:
+`imports` and set `standalone: true` explicitly (required in Angular 14), then bind the options in its template:
 
 ```html
-<ecs-primeng-table [tableOptions]="tableOptions" />
+<ecs-primeng-table [tableOptions]="tableOptions"></ecs-primeng-table>
 ```
 
 The API returns ordinary records, not nested `children` arrays. For example,
@@ -94,10 +94,10 @@ For full documentation, usage instructions, examples, and updates, please visit 
 [https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish](https://github.com/competergiga/ECSPrimengTable/tree/Angular19-publish)
 
 > **Note:** Make sure to check the GitHub README for detailed guidance on how to integrate and use this component in your projects.
-## Column header translations (Angular 19)
+## Column header translations (Angular 14)
 
-Install `@ngx-translate/core@^17` in the consuming application and configure
-`provideTranslateService` once in its application providers. If your application
+Install `@ngx-translate/core@14` in the consuming application and configure
+`TranslateModule.forRoot` once in its application providers. If your application
 already uses ngx-translate, reuse its existing provider and dictionaries.
 
 The table and column selector render `header | translate`. The selector searches
@@ -122,24 +122,40 @@ For example, `es.json` contains:
 Install the loader in the application (the table library only needs core):
 
 ```sh
-npm install @ngx-translate/core@^17 @ngx-translate/http-loader@^17
+npm install @ngx-translate/core@14 @ngx-translate/http-loader@7
 ```
 
-Configure it once in `app.config.ts`, alongside the existing `provideHttpClient()`:
+Configure it once in `app.config.ts` using Angular 14's module providers:
 
 ```ts
-import { provideTranslateService } from '@ngx-translate/core';
-import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { importProvidersFrom } from '@angular/core';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-provideTranslateService({
-  lang: 'es',
-  fallbackLang: 'en',
-  loader: provideTranslateHttpLoader({
-    prefix: './assets/i18n/',
-    suffix: '.json'
-  })
-})
+export function translateLoader(http: HttpClient): TranslateHttpLoader {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export const appConfig = {
+  providers: [importProvidersFrom(
+    HttpClientModule,
+    TranslateModule.forRoot({
+      defaultLanguage: 'en',
+      loader: { provide: TranslateLoader, useFactory: translateLoader, deps: [HttpClient] }
+    })
+  )]
+};
 ```
+
+Import `TranslateModule` in each standalone component that uses the `translate`
+pipe; do not import `TranslatePipe` or `TranslateDirective` directly in Angular 14.
+Call `TranslateService.use('es')` during application initialization to select the
+initial language. `setDefaultLang('en')` sets the fallback language in ngx-translate 14.
+For an NgModule application, put `HttpClientModule` and `TranslateModule.forRoot(...)`
+in the root module's `imports`, and `TranslateModule` in feature modules.
+PrimeNG 14 uses `PrimeNGConfig` from `primeng/api` and CSS themes from
+`primeng/resources/themes`; it does not use `providePrimeNG` or `@primeng/themes` presets.
 
 If the application already uses ngx-translate, reuse its provider and add the
 header keys to its existing JSON dictionaries instead of configuring another loader.
@@ -151,7 +167,7 @@ then the original key with ngx-translate's default missing-translation handler.
 Alternatively, return `header: 'columns.username'` from the backend and define
 `{ "columns": { "username": "Usuario" } }` in the Spanish JSON file.
 
-For the complete integration guide, see [Multilanguage column headers](https://github.com/competergiga/ECSPrimengTable/blob/Angular19-publish/README.md#324-multilanguage-column-headers-angular-19).
+The Angular 14 setup above replaces the provider APIs shown in the upstream Angular 19 guide.
 
 ## Optional navigation state
 
@@ -172,7 +188,7 @@ tableOptions = createTableOptions({
 ```
 
 Register `providers: [ECSPrimengTableStateService]` on a parent component with a
-`<router-outlet />` and put both list and detail routes under it. Use Angular
+`<router-outlet></router-outlet>` and put both list and detail routes under it. Use Angular
 Router navigation between them. An enabled table requires a non-empty key and
 this scope provider.
 

@@ -18,7 +18,7 @@ export class SpinnerInterceptor implements HttpInterceptor {
     return next.handle(req).pipe(
       tap(event => {
         if (isRowRequest && event instanceof HttpResponse && event.ok) {
-          this.sharedService.lastRowRetrievalMs.set(performance.now() - startedAt);
+          this.sharedService.lastRowRetrievalMs = performance.now() - startedAt;
         }
       }),
       finalize(() => {

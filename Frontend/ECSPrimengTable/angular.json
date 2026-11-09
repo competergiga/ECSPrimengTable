@@ -15,17 +15,15 @@
       "prefix": "ecs",
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
+          "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "outputPath": "dist/ECSPrimengTable",
             "index": "src/index.html",
-            "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "main": "src/main.ts",
+            "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/styles.scss"]
+            "styles": ["node_modules/primeng/resources/themes/lara-light-blue/theme.css", "node_modules/primeng/resources/primeng.min.css", "src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -33,7 +31,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumError": "1.2MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -52,19 +50,19 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "ECSPrimengTable:build:production"
+              "browserTarget": "ECSPrimengTable:build:production"
             },
             "development": {
-              "buildTarget": "ECSPrimengTable:build:development"
+              "browserTarget": "ECSPrimengTable:build:development"
             }
           },
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular/build:extract-i18n"
+          "builder": "@angular-devkit/build-angular:extract-i18n"
         }
       }
     },
@@ -75,7 +73,7 @@
       "prefix": "ecs",
       "architect": {
         "build": {
-          "builder": "@angular/build:ng-packagr",
+          "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
             "project": "projects/ecs-primeng-table/ng-package.json"
           },
