@@ -88,7 +88,8 @@ internal static class TableConfigurationService {
                 InitialWidth = colAtt.InitialWidth,
                 DateFormat = colAtt.DateFormat,
                 DateTimezone = colAtt.DateTimezone,
-                DateCulture = colAtt.DateCulture
+                DateCulture = colAtt.DateCulture,
+                ExportDateFormat = colAtt.ExportDateFormat
             });
         }
         ColumnAttributeOverrideService.ApplyOverridesToColumns(columnsInfo, dynamicAttributes);
