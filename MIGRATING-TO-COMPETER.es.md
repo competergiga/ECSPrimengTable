@@ -11,7 +11,7 @@ Esta guía explica cómo migrar una aplicación existente desde los paquetes npm
 
 Estas son las versiones declaradas en el repositorio; no se ha verificado que sean las últimas disponibles en los registros de paquetes. Consulta el [manifiesto npm](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) y el [proyecto .NET](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj).
 
-El cambio de nombre de los paquetes no cambia los nombres de las clases exportadas de Angular, el selector del componente ni los espacios de nombres de C#. El método que genera la configuración y sus modelos de respuesta son iguales en las ramas comparadas.
+El cambio de nombre de los paquetes no cambia los nombres de las clases exportadas de Angular, el selector del componente ni los espacios de nombres de C#. Sin embargo, actualizar desde NuGet `8.0.8` a `8.2.0` no es solo un cambio de nombre: hay cambios de contrato y de firmas públicas que deben revisarse según el apartado 6.1.
 
 Tras el merge de `Angular19`, `Angular19-publish` incluye las funcionalidades opcionales de tabla en árbol y selección en npm `19.2.0` y NuGet `8.2.0`. Migrar a estas versiones ya no implica renunciar a esas funcionalidades. Las tablas planas existentes no necesitan activar el modo árbol; las aplicaciones que lo utilicen deben verificar sus endpoints de árbol, modos de carga, selección y vistas guardadas después de migrar.
 
@@ -105,17 +105,30 @@ El paquete de backend sigue teniendo .NET 8 como destino. Sus cambios de publica
 
 ## 6. No cambiar los nombres de la API existente
 
-Los siguientes elementos no cambian con esta migración:
+Los siguientes nombres y elementos existentes se conservan; esto no significa que todas las firmas y modelos sean idénticos a los de `8.0.8`:
 
 - Los espacios de nombres de C#, como `ECS.PrimengTable.Services`, `ECS.PrimengTable.Models` y `ECS.PrimengTable.Attributes`.
-- `EcsPrimengTableService.GetTableConfiguration<T>()` y `[ColumnAttributes(...)]`.
+- El nombre de `EcsPrimengTableService.GetTableConfiguration<T>()` y el atributo `[ColumnAttributes(...)]`; revisa las firmas según el apartado 6.1.
 - Los nombres de las clases e interfaces exportadas de Angular.
 - El selector HTML `<ecs-primeng-table>`.
 - Las opciones de tabla, como `urlTableConfiguration` y `urlTableData`.
 - Las URLs de los endpoints y los métodos HTTP de tu aplicación.
-- El contrato JSON de configuración, incluidos `columnsInfo`, `allowedItemsPerPage` y los ajustes de fechas y vistas.
+- Los campos existentes de configuración, como `columnsInfo` y `allowedItemsPerPage`; desde `8.0.8` se ha añadido `exportDateFormat`.
 
 No sustituyas `ECS` por `ComPeter` en todo el código fuente. Solo hay que renombrar los identificadores de los paquetes y los orígenes de los imports npm.
+
+### 6.1. Cambios necesarios desde NuGet 8.0.8
+
+El commit `55e1ed20` ya corresponde a la versión `8.1.1`, no a `8.0.8`. Comparar únicamente desde ese commit omite cambios anteriores que afectan a esta migración.
+
+1. **Actualiza frontend y backend de forma coordinada.** Usa `@competer/primeng-table@19.2.0` y `ComPeter.PrimeNGTable` `8.2.0`, actualiza las bibliotecas internas y recompila y despliega ambos lados. Comprueba que los alias de TypeScript, los archivos de bloqueo y los artefactos servidos no mantengan una versión antigua.
+2. **Incluye `exportDateFormat` en la configuración y en las peticiones de datos personalizadas.** Desde `8.0.8`, `TableConfigurationModel` y `TableQueryRequestModel` incorporan este campo. El generador actual de configuración lo rellena y el componente Angular actual lo envía automáticamente, también al consultar datos sin exportar. Si construyes la configuración o las peticiones manualmente, añade un formato no nulo; el valor predeterminado del backend es `dd-mmm-yyyy hh:mm:ss`. No basta con enviarlo solo al exportar a Excel.
+3. **Revisa las llamadas a métodos públicos.** `GetTableConfiguration<T>` incorpora `exportDateFormat` antes de `maxViews` y `dynamicAttributes` antes de `excludedColumns`. `PerformDynamicQuery<T>` también incorpora `dynamicAttributes` antes de `excludedColumns`. Adapta los argumentos posicionales a las firmas actuales; utiliza argumentos con nombre para evitar desplazamientos. Revisa también las llamadas a `GenerateExcelReport<T>` y recompila los proyectos y paquetes internos que consuman estas APIs; no reutilices ensamblados compilados contra las firmas anteriores.
+4. **Conserva la BD de vistas existente.** No se requiere una migración de esquema ni borrar las vistas por esta actualización. No han cambiado `ITableViewEntity`, los modelos de carga/guardado, el servicio de persistencia ni el mapeo de Entity Framework del ejemplo respecto a `8.0.8`. `ViewData` sigue siendo un JSON serializado como cadena; las nuevas propiedades de árbol `treeExpandedKeys` y `treeChildPages` son opcionales.
+
+Con `[ApiController]` y la validación implícita de referencias no null habilitada, omitir `exportDateFormat` puede provocar un HTTP 400 automático con un error como `The ExportDateFormat field is required.`, antes de entrar en la acción. La declaración `= null!` del modelo no proporciona un valor predeterminado en ejecución. Corrige el contrato enviado; no desactives la validación global para ocultar el error.
+
+La carga de vistas en BD mantiene un **POST** a `views.urlGet`, con `tableViewSaveKey` en el cuerpo JSON y `ViewLoadRequestModel` en el backend. Este modelo no contiene `ExportDateFormat` y no ha cambiado desde `8.0.8`: un 400 en `GetViews`/`getview` debe diagnosticarse por separado, comprobando el cuerpo enviado, la respuesta de validación y la firma de la acción consumidora.
 
 ## 7. Restaurar, compilar y verificar
 
@@ -155,4 +168,4 @@ Coloca un punto de interrupción al principio de tu acción de configuración. S
 
 Si la petición que falla es en realidad la de datos, inspecciona la respuesta, el tamaño de página y las columnas enviados antes de modificar el endpoint de configuración. Si la configuración devuelve 200 pero el navegador falla al leerla, verifica tanto la estructura JSON como el contrato de `HttpResponse<T>` completo del adaptador descrito anteriormente.
 
-El cambio de nombre de los paquetes no requiere modificar las URLs de configuración ni añadir parámetros a las peticiones. Diagnostica la respuesta antes de cambiar cualquiera de esos elementos.
+El cambio de nombre por sí solo no requiere modificar las URLs de configuración. Si partes de `8.0.8`, sí debes aplicar los ajustes de contrato del apartado 6.1, en particular `exportDateFormat`. Diagnostica cada respuesta antes de modificar las rutas o atribuir un 400 de vistas a la base de datos.

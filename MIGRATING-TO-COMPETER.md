@@ -11,7 +11,7 @@ This guide covers migrating an existing application from the original ECS npm an
 
 These are the versions declared in the repository, not a verification of the latest versions available in the package registries. See the [npm manifest](Frontend/ECSPrimengTable/projects/ecs-primeng-table/package.json) and [.NET project](Backend/ECS.PrimengTable/ECS.PrimengTable.csproj).
 
-The package rename does not rename the exported Angular classes, the component selector, or the C# namespaces. The configuration-generation method and its response models are unchanged between the compared branches.
+The package rename does not rename the exported Angular classes, the component selector, or the C# namespaces. However, upgrading from NuGet `8.0.8` to `8.2.0` is more than a rename: review the contract and public-signature changes in section 6.1.
 
 Following the merge from `Angular19`, `Angular19-publish` includes the optional tree-table and selection features in npm `19.2.0` and NuGet `8.2.0`. Migrating to these versions no longer requires giving up those features. Existing flat tables do not need to enable tree mode; applications that use it should verify their tree endpoints, loading modes, selection, and saved views after migrating.
 
@@ -105,17 +105,30 @@ The backend package still targets .NET 8. Its publication changes also add refer
 
 ## 6. Do Not Rename the Existing API
 
-The following remain unchanged for this migration:
+The following existing names and elements are retained; this does not mean that all signatures and models are identical to those in `8.0.8`:
 
 - C# namespaces such as `ECS.PrimengTable.Services`, `ECS.PrimengTable.Models`, and `ECS.PrimengTable.Attributes`.
-- `EcsPrimengTableService.GetTableConfiguration<T>()` and `[ColumnAttributes(...)]`.
+- The name of `EcsPrimengTableService.GetTableConfiguration<T>()` and the `[ColumnAttributes(...)]` attribute; review the signatures as described in section 6.1.
 - Angular exported class and interface names.
 - The HTML selector `<ecs-primeng-table>`.
 - Table options such as `urlTableConfiguration` and `urlTableData`.
 - Your application's endpoint URLs and HTTP methods.
-- The configuration JSON contract, including `columnsInfo`, `allowedItemsPerPage`, and the date and view settings.
+- Existing configuration fields such as `columnsInfo` and `allowedItemsPerPage`; `exportDateFormat` has been added since `8.0.8`.
 
 Do not replace `ECS` with `ComPeter` throughout your source code. Only the package identifiers and npm import sources need renaming.
+
+### 6.1. Required Changes When Upgrading from NuGet 8.0.8
+
+Commit `55e1ed20` already corresponds to version `8.1.1`, not `8.0.8`. Comparing only from that commit misses earlier changes that affect this migration.
+
+1. **Update the frontend and backend together.** Use `@competer/primeng-table@19.2.0` and `ComPeter.PrimeNGTable` `8.2.0`, update internal libraries, and rebuild and deploy both sides. Check that TypeScript aliases, lockfiles, and served artifacts do not retain an old version.
+2. **Include `exportDateFormat` in custom configuration responses and data requests.** Since `8.0.8`, `TableConfigurationModel` and `TableQueryRequestModel` have gained this field. The current configuration generator populates it and the current Angular component sends it automatically, including data queries that do not export anything. If you build configuration responses or requests manually, add a non-null format; the backend default is `dd-mmm-yyyy hh:mm:ss`. Sending it only for Excel exports is not sufficient.
+3. **Review public method calls.** `GetTableConfiguration<T>` adds `exportDateFormat` before `maxViews` and `dynamicAttributes` before `excludedColumns`. `PerformDynamicQuery<T>` also adds `dynamicAttributes` before `excludedColumns`. Adapt positional arguments to the current signatures; use named arguments to avoid shifted arguments. Also review calls to `GenerateExcelReport<T>` and rebuild internal projects and packages that consume these APIs; do not reuse assemblies compiled against the old signatures.
+4. **Keep the existing views database.** This upgrade does not require a schema migration or deleting saved views. `ITableViewEntity`, the load/save models, the persistence service, and the example Entity Framework mapping are unchanged from `8.0.8`. `ViewData` remains JSON serialized as a string; the new tree properties `treeExpandedKeys` and `treeChildPages` are optional.
+
+With `[ApiController]` and implicit non-nullable reference validation enabled, omitting `exportDateFormat` can cause an automatic HTTP 400 with an error such as `The ExportDateFormat field is required.`, before the action is entered. The model's `= null!` declaration does not supply a runtime default. Correct the submitted contract rather than disabling validation globally to hide the error.
+
+Loading database views still uses a **POST** to `views.urlGet`, with `tableViewSaveKey` in the JSON body and `ViewLoadRequestModel` on the backend. This model does not contain `ExportDateFormat` and has not changed since `8.0.8`: diagnose a 400 from `GetViews`/`getview` separately by checking the submitted body, the validation response, and the consuming action's signature.
 
 ## 7. Restore, Build, and Verify
 
@@ -155,4 +168,4 @@ Set a breakpoint at the beginning of your configuration action. If it is not rea
 
 If the failed request is actually the data request, inspect the response and submitted page size and columns before changing the configuration endpoint. If configuration returns 200 but the browser fails while reading it, verify both the JSON shape and the full `HttpResponse<T>` adapter contract described above.
 
-The package rename does not require changing configuration URLs or adding request parameters. Diagnose the response before changing either.
+The package rename alone does not require changing configuration URLs. When upgrading from `8.0.8`, you must still apply the contract adjustments in section 6.1, particularly `exportDateFormat`. Diagnose each response before changing routes or attributing a views HTTP 400 to the database.
