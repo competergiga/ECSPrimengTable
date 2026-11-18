@@ -69,6 +69,7 @@ export class TreeDemo {
       for (const storage of ['database', 'local'] as const) {
         const key = `tree-demo-${mode}-${storage}`;
         this.options[key] = createTableOptions({
+          showDataLoadTime: true,
           tree: { keyExpr: 'id', parentIdExpr: 'parentId', rootValue: 0, hasItemsExpr: 'hasChildren', column: 'text', loadMode: mode },
           statePersistence: { enabled: true, key },
           responsive: { headerMenu: true, rowMenu: true },

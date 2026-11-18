@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -7,7 +6,6 @@ import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SpinnerService } from './core/services/spinner.service';
-import { SharedService } from './core/services/shared.service';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +14,6 @@ import { SharedService } from './core/services/shared.service';
     RouterLink,
     RouterLinkActive,
     TranslatePipe,
-    DecimalPipe,
     FormsModule,
     ToastModule,
     DialogModule,
@@ -26,7 +23,6 @@ import { SharedService } from './core/services/shared.service';
 })
 export class App {
   readonly translate = inject(TranslateService);
-  readonly lastRowRetrievalMs = inject(SharedService).lastRowRetrievalMs;
   isSpinnerVisible: boolean = false;
   isUserAdmin = false;
   constructor(private readonly spinnerService: SpinnerService) {

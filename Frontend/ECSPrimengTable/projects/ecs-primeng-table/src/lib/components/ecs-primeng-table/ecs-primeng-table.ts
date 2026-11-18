@@ -187,6 +187,13 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
   allowedRowsPerPage: number[] = []; // The different values of rows per page allowed
   totalRecords: number = 0; // The number of total records that are available (taking into account the filters)
   totalRecordsNotFiltered: number = 0; // The total number of records available if no filters were applied
+  private lastDataLoadMs: number | null = null;
+
+  get dataLoadTimeSuffix(): string {
+    return this.tableOptions.showDataLoadTime && this.lastDataLoadMs !== null
+      ? ` (${this.lastDataLoadMs} ms)`
+      : '';
+  }
 
   dateFormat: string = "dd-MMM-yyyy HH:mm:ss zzzz";
   dateTimezone: string = "+00:00";
@@ -644,11 +651,16 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     let viewData: ITableViewData = viewToLoad.viewData;
     this.treeState?.restore(viewData.treeExpandedKeys, viewData.treeChildPages);
     this.treeStateRestored = !!this.treeState;
-    this.columnsSelected = viewData.columnsShown
-        .map(data => this.columns.find((col: any) => col.field === data.field))
-        .filter((col): col is IColumnMetadata => col !== undefined)
-        .filter(col => !this.columnsCantBeHidden.includes(col));
-    this.tableOptions.columns!.shown = this.tableService.orderColumnsWithFrozens(this.columnsCantBeHidden.concat(this.columnsSelected));
+    const savedColumns = viewData.columnsShown
+      .map(data => this.columns.find(col => col.field === data.field))
+      .filter((col): col is IColumnMetadata => col !== undefined);
+    const savedFields = new Set(savedColumns.map(col => col.field));
+    const missingRequiredColumns = this.columnsCantBeHidden.filter(col => !savedFields.has(col.field));
+    this.columnsSelected = savedColumns.filter(col => col.canBeHidden);
+    this.tableOptions.columns!.shown = this.tableService.orderColumnsWithFrozens([
+      ...savedColumns,
+      ...missingRequiredColumns
+    ]);
     this.currentPage = viewData.currentPage;
     this.currentRowsPerPage = viewData.currentRowsPerPage;
     this.restoreGlobalSearch(viewData.globalSearchText);
@@ -821,6 +833,7 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
     if (selectionKey !== this.selectionQueryKey) this.matchingSelectionKeys = undefined;
     this.selectionQueryKey = selectionKey;
     this.selectionQuery = structuredClone(requestData);
+    const startedAt = this.tableOptions.showDataLoadTime ? performance.now() : null;
     if (this.treeState) {
       const tree = this.treeState;
       if (!this.treeStateRestored) tree.restore([...tree.expanded], tree.snapshotPages());
@@ -831,7 +844,10 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
       const loading = tree.load(this.currentPage, this.currentRowsPerPage, this.treeFetcher(requestData));
       this.tableOptions.data = [];
       loading.then(updated => {
-        if (updated && !this.destroyed) this.syncTreeRows();
+        if (updated && !this.destroyed) {
+          this.recordDataLoadTime(startedAt);
+          this.syncTreeRows();
+        }
       }).catch(error => {
         if (!this.destroyed) this.tableService.handleTableError(error, 'Tree data error');
       }).finally(() => {
@@ -851,9 +867,16 @@ export class ECSPrimengTable implements OnInit, AfterViewInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (response: HttpResponse<ITablePagedResponse>) => this.handleTableDataResponse(response.body!),
+        next: (response: HttpResponse<ITablePagedResponse>) => {
+          this.handleTableDataResponse(response.body!);
+          this.recordDataLoadTime(startedAt);
+        },
         error: (err) => this.tableService.handleTableError(err, 'Columns Error')
       });
+  }
+
+  private recordDataLoadTime(startedAt: number | null): void {
+    this.lastDataLoadMs = startedAt === null ? null : Math.round(performance.now() - startedAt);
   }
 
   modifyFiltersWithoutGlobalAndSelectedRows(filters: any, overrideOption: number = -1): any {
