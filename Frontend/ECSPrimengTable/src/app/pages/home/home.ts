@@ -57,6 +57,7 @@ export class Home implements OnInit {
   };
   tableOptions: ITableOptions = createTableOptions({
     isActive: false,
+    showDataLoadTime: true,
     responsive: {
       headerMenu: true,
       rowMenu: true,

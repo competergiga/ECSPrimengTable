@@ -385,7 +385,7 @@
                             <div [innerHTML]="(tableOptions.legend?.content) | ecsTranslate"></div>
                         </p-popover>
                     }
-                    <span>{{ 'Showing {{count}} records of {{total}} available records' | ecsTranslate: { count: totalRecords, total: totalRecordsNotFiltered } }}</span>
+                    <span>{{ 'Showing {{count}} records of {{total}} available records' | ecsTranslate: { count: totalRecords, total: totalRecordsNotFiltered } }}{{ dataLoadTimeSuffix }}</span>
                 </div>
             </div>
         </ng-template>
@@ -396,7 +396,7 @@
                 <ecs-table-button [button]="tableOptions.legend?.button" [rowData]="null" [overrideAction]="treeLegend.toggle.bind(treeLegend)" />
                 <p-popover #treeLegend><div [innerHTML]="(tableOptions.legend?.content) | ecsTranslate"></div></p-popover>
             }
-            <span>{{ 'Showing {{count}} root nodes of {{total}} available root nodes' | ecsTranslate: { count: totalRecords, total: totalRecordsNotFiltered } }}</span>
+            <span>{{ 'Showing {{count}} root nodes of {{total}} available root nodes' | ecsTranslate: { count: totalRecords, total: totalRecordsNotFiltered } }}{{ dataLoadTimeSuffix }}</span>
             <p-paginator [first]="currentPage * currentRowsPerPage" [rows]="currentRowsPerPage" [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="allowedRowsPerPage" dropdownAppendTo="body" (onPageChange)="treePageChange($event)" />
         </div>

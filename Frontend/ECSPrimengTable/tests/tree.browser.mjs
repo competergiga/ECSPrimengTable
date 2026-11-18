@@ -110,7 +110,7 @@ try {
   await page.locator('ecs-tree-demo ecs-table-cell').first().waitFor();
   await page.locator('nav select').selectOption('en');
   await page.getByRole('heading', { name: 'Tree grid', exact: true }).waitFor();
-  assert.match(await page.getByTestId('row-retrieval-time').innerText(), /Last row retrieval: [\d,.]+ ms/);
+  await page.getByText(/^Showing 36 root nodes of 36 available root nodes \(\d+ ms\)$/).waitFor();
   const rows = page.locator('ecs-tree-demo tbody tr[aria-level]');
   const node = text => rows.filter({ has: page.getByText(text, { exact: true }) });
   assert.equal(requests.filter(request => request.roots).length, 1, 'Initial route must load roots once');
@@ -242,6 +242,7 @@ try {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.getByRole('link', { name: 'Full example', exact: true }).click();
   await page.locator('ecs-home ecs-table-cell').first().waitFor();
+  await page.getByText(/^Showing \d+ records of \d+ available records \(\d+ ms\)$/).waitFor();
   assert.ok(await page.locator('ecs-home ecs-table-predefined-filters').count() > 0, 'Flat demo retains predefined filters');
   assert.equal(await page.locator('ecs-home .ecs-tree-toggle').count(), 0, 'Flat grid must remain opt-out');
   const flatSearch = page.getByPlaceholder('Search keyword', { exact: true });

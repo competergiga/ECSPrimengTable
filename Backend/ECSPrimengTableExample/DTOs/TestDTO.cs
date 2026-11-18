@@ -9,10 +9,10 @@ namespace ECSPrimengTableExample.DTOs {
         [ColumnAttributes(sendColumnAttributes: false)]
         public bool CanBeDeleted { get; set; }
 
-        [ColumnAttributes("Username", dataAlignHorizontal: DataAlignHorizontal.Left, canBeHidden: false, columnDescription: "A random username", frozenColumnAlign: FrozenColumnAlign.Left, initialWidth: 400)]
+        [ColumnAttributes("Username", dataAlignHorizontal: DataAlignHorizontal.Left, canBeHidden: false, columnDescription: "A random username", frozenColumnAlign: FrozenColumnAlign.Left, initialWidth: 350)]
         public string Username { get; set; } = string.Empty;
 
-        [ColumnAttributes("Age", dataType: DataType.Numeric, columnDescription: "The age of the user")]
+        [ColumnAttributes("Age", dataType: DataType.Numeric, columnDescription: "The age of the user", canBeHidden: false)]
         public byte? Age { get; set; }
 
         [ColumnAttributes("Employment status", filterPredefinedValuesName: "employmentStatusPredefinedFilter", columnDescription: "A predefined filter that shows the employment status of the user",

@@ -6,6 +6,9 @@ import { ITreeTableOptions } from '../utils/tree-table-state';
 export interface ITableOptions {
     tree?: ITreeTableOptions;
 
+    /** Show the duration of the last successful data load next to the record count. @default false */
+    showDataLoadTime?: boolean;
+
     /** Optional responsive behavior. Existing applications keep their current buttons by default. */
     responsive?: {
         /** CSS viewport width where Tablet starts. Default: 768. */
@@ -662,6 +665,7 @@ export interface ITableOptions {
 /** Default configuration options for ECS Primeng table */
 export const DEFAULT_TABLE_OPTIONS: ITableOptions = {
     isActive: true,
+    showDataLoadTime: false,
     responsive: {
         tabletMinWidth: 768,
         desktopMinWidth: 1200,
